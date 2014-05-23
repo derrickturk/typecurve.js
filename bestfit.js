@@ -8,7 +8,8 @@
                 return sse(new ns.Hyperbolic(qi, Di, b), rate, time)
             }),
             initial_simplex(rate, time),
-            1.0, 2.0, 0.5
+            1.0, 2.0, 0.5,
+            1000
         )
 
         return new ns.Hyperbolic(
@@ -22,7 +23,8 @@
                 return sse_interval(new ns.Hyperbolic(qi, Di, b), vol, time)
             }),
             initial_simplex(vol, time),
-            1.0, 2.0, 0.5
+            1.0, 2.0, 0.5,
+            1000
         )
 
         return new ns.Hyperbolic(
