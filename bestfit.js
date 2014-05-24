@@ -6,10 +6,10 @@
         var best_params = nelder_mead(
             make_constrained_objective(function (qi, Di, b) {
                 return sse(new ns.Hyperbolic(qi, Di, b), rate, time)
-            }),
+            }, [1, 0.01, 0], [1e99, 20, 5]),
             initial_simplex(rate, time),
-            1.0, 2.0, 0.5,
-            1000
+            1.1, 2.5, 0.45,
+            25000
         )
 
         return new ns.Hyperbolic(
@@ -21,10 +21,10 @@
         var best_params = nelder_mead(
             make_constrained_objective(function (qi, Di, b) {
                 return sse_interval(new ns.Hyperbolic(qi, Di, b), vol, time)
-            }),
+            } [1, 0.01, 0], [1e99, 20, 5]),
             initial_simplex(vol, time),
-            1.0, 2.0, 0.5,
-            1000
+            1.1, 2.5, 0.45,
+            50000
         )
 
         return new ns.Hyperbolic(
@@ -39,18 +39,23 @@
             [qi_guess * 0.5, Di_guess * 0.5, 1.2],
             [qi_guess * 1.5, Di_guess * 0.75, 0.8],
             [qi_guess, Di_guess, 2.0],
-            [qi_guess * 2, Di_gues * 1.5, 0.5]
+            [qi_guess * 2, Di_guess * 1.5, 0.5]
         ]
     }
 
     function make_constrained_objective(f, lower, upper)
     {
         return function() {
-            if (arguments.some(function (v, i) {
-                return v < lower[i] || v > upper[i]
+            var args = arguments
+            if (lower.some(function (v, i) {
+                return args[i] < v
             }))
                 return Infinity
-            return f.apply(arguments)
+            if (upper.some(function (v, i) {
+                return args[i] > v
+            }))
+                return Infinity
+            return f.apply(null, args)
         }
     }
 
@@ -64,9 +69,9 @@
             best = mindex(result),
             worst = maxdex(result),
             center = centroid(start),
-            i = 0
+            iter = 0
 
-        while (i < max_iter) {
+        while (iter++ < max_iter) {
             var reflect = center.map(function (v, i) {
                 return (1.0 + ref_factor) * v - ref_factor * start[worst][i]
             }), reflect_res = f.apply(null, reflect)
@@ -88,7 +93,7 @@
                 best = worst
                 worst = maxdex(result)
                 center = centroid(start)
-            } else if (result.any(function (v, i) {
+            } else if (result.some(function (v, i) {
                   return (v > reflect_res && i != worst)
               })) {
                 // there's someone worse than the reflected point who is not
@@ -109,11 +114,12 @@
                 }
 
                 var contract = start[worst].map(function (v, i) {
-                    return con_factor * v + (1.0 - con_factor) * center
+                    return con_factor * v + (1.0 - con_factor) * center[i]
                 }), contract_res = f.apply(null, contract)
 
-                if (contract_res > result[worst]) {
-                    // it got worse! contract all the things!
+                if (contract_res >= result[worst]) {
+                    // it got worse! (or worse, no better!)
+                    // contract all the things!
                     for (var i = 0; i < start.length; ++i) {
                         if (i != best) {
                             start[i] = start[i].map(function (v, i) {
@@ -143,7 +149,7 @@
             if (val < arr[prev])
                 return i
             return prev
-        }, Infinity)
+        }, 0)
     }
 
     function maxdex(vec)
@@ -152,12 +158,12 @@
             if (val > arr[prev])
                 return i
             return prev
-        }, -Infinity)
+        }, 0)
     }
 
     function centroid(simplex)
     {
-        var zero = new Array(simplex.length)
+        var zero = new Array(simplex[0].length)
         for (var i = 0; i < simplex[0].length; ++i)
             zero[i] = 0.0
         return simplex.reduce(function (prev, vec) {
@@ -186,6 +192,9 @@
                 Math.pow(act - (forecast_cum[i + 1] - forecast_cum[i]), 2.0)
         }, 0.0)
     }
+
+    ns.make_constrained_objective = make_constrained_objective
+    ns.nelder_mead = nelder_mead
 
 })(window.typecurve = window.typecurve || {})
 
