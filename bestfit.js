@@ -8,8 +8,8 @@
                 return sse(new ns.Hyperbolic(qi, Di, b), rate, time)
             }, [1, 0.01, 0], [1e99, 20, 5]),
             initial_simplex(rate, time),
-            1.1, 2.5, 0.45,
-            25000
+            1.0, 2.0, 0.5,
+            300
         )
 
         return new ns.Hyperbolic(
@@ -21,10 +21,10 @@
         var best_params = nelder_mead(
             make_constrained_objective(function (qi, Di, b) {
                 return sse_interval(new ns.Hyperbolic(qi, Di, b), vol, time)
-            } [1, 0.01, 0], [1e99, 20, 5]),
+            }, [1, 0.01, 0], [1e99, 20, 5]),
             initial_simplex(vol, time),
-            1.1, 2.5, 0.45,
-            50000
+            1.0, 2.0, 0.5,
+            300
         )
 
         return new ns.Hyperbolic(
@@ -34,13 +34,32 @@
     function initial_simplex(rate, time)
     {
         var qi_guess = rate[0],
-            Di_guess = (rate[0] - rate[1]) / (time[1] - time[0]) / rate[0]
-        return [
-            [qi_guess * 0.5, Di_guess * 0.5, 1.2],
-            [qi_guess * 1.5, Di_guess * 0.75, 0.8],
+            Di_guess = (rate[0] - rate[1]) / (time[1] - time[0]) / rate[0],
+            b_guess = 1.5
+        var x = [
+            [qi_guess * 0.25, Di_guess * 0.5, 1.3],
+            [qi_guess * 1.5, Di_guess * 5, 0.8],
             [qi_guess, Di_guess, 2.0],
-            [qi_guess * 2, Di_guess * 1.5, 0.5]
+            [qi_guess * 5, Di_guess, 0.5]
         ]
+
+        console.log(JSON.stringify(x))
+        
+        return x
+
+        /*
+        var simplex = []
+        for (var i = 0; i < 4; ++i) {
+            simplex.push([qi_guess, Di_guess, b_guess])
+            qi_guess += 0.05
+            Di_guess += 0.05
+            b_guess += 0.05
+        }
+
+        console.log(JSON.stringify(simplex))
+
+        return simplex
+        */
     }
 
     function make_constrained_objective(f, lower, upper)
@@ -68,7 +87,7 @@
         var result = start.map(function (vec) { return f.apply(null, vec) }),
             best = mindex(result),
             worst = maxdex(result),
-            center = centroid(start),
+            center = centroid(start, worst),
             iter = 0
 
         while (iter++ < max_iter) {
@@ -92,7 +111,7 @@
 
                 best = worst
                 worst = maxdex(result)
-                center = centroid(start)
+                center = centroid(start, worst)
             } else if (result.some(function (v, i) {
                   return (v > reflect_res && i != worst)
               })) {
@@ -101,7 +120,7 @@
                 start[worst] = reflect
                 result[worst] = reflect_res
                 worst = maxdex(result)
-                center = centroid(start)
+                center = centroid(start, worst)
             } else {
                 // the reflected point is worse than everyone
                 // (except maybe for the worst), so contract
@@ -110,7 +129,7 @@
                     start[worst] = reflect
                     result[worst] = reflect_res
                     worst = maxdex(result)
-                    center = centroid(start)
+                    center = centroid(start, worst)
                 }
 
                 var contract = start[worst].map(function (v, i) {
@@ -130,12 +149,12 @@
                     result = start.map(function (vec) { return f.apply(null, vec) })
                     best = mindex(result)
                     worst = maxdex(result)
-                    center = centroid(start)
+                    center = centroid(start, worst)
                 } else {
                     start[worst] = contract
                     result[worst] = contract_res
                     worst = maxdex(result)
-                    center = centroid(start)
+                    center = centroid(start, worst)
                 }
             }
         }
@@ -161,16 +180,17 @@
         }, 0)
     }
 
-    function centroid(simplex)
+    function centroid(simplex, worst)
     {
         var zero = new Array(simplex[0].length)
         for (var i = 0; i < simplex[0].length; ++i)
             zero[i] = 0.0
-        return simplex.reduce(function (prev, vec) {
+        return simplex.reduce(function (prev, vec, which) {
             for (i = 0; i < vec.length; ++i)
-                prev[i] += vec[i]
+                if (which != worst)
+                    prev[i] += vec[i]
             return prev
-        }, zero).map(function (val) { return val / simplex.length })
+        }, zero).map(function (val) { return val / (simplex.length - 1) })
     }
 
     function sse(model, rate, time)
@@ -195,6 +215,10 @@
 
     ns.make_constrained_objective = make_constrained_objective
     ns.nelder_mead = nelder_mead
+    
+    ns.sse_interval = sse_interval
+
+    ns.initial_simplex = initial_simplex
 
 })(window.typecurve = window.typecurve || {})
 
