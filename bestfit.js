@@ -194,5 +194,8 @@
                 Math.pow(act - (forecast_cum[i + 1] - forecast_cum[i]), 2.0)
         }, 0.0)
     }
+
+    ns.minIndex = mindex
+    ns.maxIndex = maxdex
 })(window.typecurve = window.typecurve || {})
 
