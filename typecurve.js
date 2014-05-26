@@ -12,6 +12,15 @@
             percentile(pct), options)
     }
 
+    ns.iota = function(initial, length, delta)
+    {
+        delta = delta || 1
+        var result = new Array(length)
+        for (var i = 0; i < length; ++i)
+            result[i] = initial + i * delta
+        return result
+    }
+
     function typecurve_production(majorphase, minorphase, aggregation, options)
     {
         options = options || {}
