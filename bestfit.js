@@ -34,32 +34,14 @@
     function initial_simplex(rate, time)
     {
         var qi_guess = rate[0],
-            Di_guess = (rate[0] - rate[1]) / (time[1] - time[0]) / rate[0],
-            b_guess = 1.5
-        var x = [
+            Di_guess = (rate[0] - rate[1]) / (time[1] - time[0]) / rate[0]
+
+        return [
             [qi_guess * 0.25, Di_guess * 0.5, 1.3],
             [qi_guess * 1.5, Di_guess * 5, 0.8],
             [qi_guess, Di_guess, 2.0],
             [qi_guess * 5, Di_guess, 0.5]
         ]
-
-        console.log(JSON.stringify(x))
-        
-        return x
-
-        /*
-        var simplex = []
-        for (var i = 0; i < 4; ++i) {
-            simplex.push([qi_guess, Di_guess, b_guess])
-            qi_guess += 0.05
-            Di_guess += 0.05
-            b_guess += 0.05
-        }
-
-        console.log(JSON.stringify(simplex))
-
-        return simplex
-        */
     }
 
     function make_constrained_objective(f, lower, upper)
@@ -212,13 +194,5 @@
                 Math.pow(act - (forecast_cum[i + 1] - forecast_cum[i]), 2.0)
         }, 0.0)
     }
-
-    ns.make_constrained_objective = make_constrained_objective
-    ns.nelder_mead = nelder_mead
-    
-    ns.sse_interval = sse_interval
-
-    ns.initial_simplex = initial_simplex
-
 })(window.typecurve = window.typecurve || {})
 
