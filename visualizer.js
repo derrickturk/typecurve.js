@@ -44,6 +44,11 @@
         }, [arr[0], arr[0]])
     }
 
+    function secant_effective(Di, b)
+    {
+        return 1.0 - Math.pow(b * Di + 1.0, -1.0 / b)
+    }
+
     function compute_typecurves(data, percentile)
     {
         function to_daily(monthly) { return monthly / 30.4 }
@@ -213,6 +218,21 @@
         selectors[1].selectedIndex = selectors[1].length - 1
     }
 
+    function update_results() {
+        document.getElementById('oil_qi').innerHTML =
+            data.oil_params.qi.toFixed(2)
+        document.getElementById('oil_Di').innerHTML =
+            secant_effective(data.oil_params.Di, data.oil_params.b).toFixed(2)
+        document.getElementById('oil_b').innerHTML =
+            data.oil_params.b.toFixed(2)
+        document.getElementById('gas_qi').innerHTML =
+            data.gas_params.qi.toFixed(2)
+        document.getElementById('gas_Di').innerHTML =
+            secant_effective(data.gas_params.Di, data.gas_params.b).toFixed(2)
+        document.getElementById('gas_b').innerHTML =
+            data.gas_params.b.toFixed(2)
+    }
+
     window.onload = function() {
         var daterange = month_range(window.ihs.month)
         fill_date_selectors(daterange)
@@ -220,5 +240,6 @@
         data = compute_typecurves(window.ihs)
         var update = initialize_display()
         update()
+        update_results()
     }
 })()
