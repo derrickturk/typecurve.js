@@ -20,6 +20,10 @@
     <div id="control">
         <p>From: <select id="from-month"></select>
         <p>To: <select id="to-month"></select>
+        <p>Operator:
+        <select id="operator">
+            <option>All</option>
+        </select>
         <p>Aggregation:
         <select id="aggregate">
             <option>Average</option>
@@ -31,12 +35,14 @@
     <div id="params">
         <div class="decline-params oil">
             <h3>Oil decline</h3>
+            <p>Well count = <span id="oil_wells">0</span>
             <p>q<sub>i</sub> = <span id="oil_qi">1000</span> bbl/day
             <p>D<sub>i</sub> = <span id="oil_Di">95</span>% secant effective / year
             <p>b = <span id="oil_b">2</span>
         </div>
         <div class="decline-params gas">
             <h3>Gas decline</h3>
+            <p>Well count = <span id="gas_wells">0</span>
             <p>q<sub>i</sub> = <span id="gas_qi">1000</span> Mcf/day
             <p>D<sub>i</sub> = <span id="gas_Di">95</span>% secant effective / year
             <p>b = <span id="gas_b">2</span>
@@ -45,7 +51,7 @@
     </div>
 </div>
 <div id="footer">
-    <h5>an experimental production by dwt | <a href="www.terminusdatascience.com">terminus data science, LLC</a></h5>
+    <h5>an experimental production by dwt | <a href="http://www.terminusdatascience.com">terminus data science, LLC</a></h5>
 </div>
 </body>
 <html>

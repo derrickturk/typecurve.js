@@ -7,6 +7,16 @@
         return minmax(Array.prototype.concat.apply([], data))
     }
 
+    function unique_header(wells, field)
+    {
+        return wells.map(function (rec) { return rec[field] }).sort()
+            .reduce(function (p, v) {
+                if (p.length == 0 || v != p[p.length - 1])
+                    p.push(v)
+                return p
+            }, [])
+    }
+
     function datecode(year, month, day)
     {
         day = day || 1
@@ -105,7 +115,7 @@
     {
         options = options || {}
         var width = options.width || 1024,
-            height = options.height || 768,
+            height = options.height || 600,
             padding = options.padding || {},
             pad_left = padding.left || 100,
             pad_right = padding.right || 20,
@@ -190,6 +200,19 @@
         return update
     }
 
+    function fill_operator_selector(ops)
+    {
+        var op_sel = document.getElementById('operator')
+
+        for (var i = 0; i < ops.length; ++i) {
+            var opt = document.createElement('option')
+            opt.text = ops[i]
+            op_sel.add(opt)
+        }
+
+        op_sel.selectedIndex = 0
+    }
+
     function fill_date_selectors(daterange) {
         var from_year = Number(daterange[0].slice(0, 4)),
             to_year = Number(daterange[1].slice(0, 4)),
@@ -220,6 +243,7 @@
     }
 
     function update_results() {
+        document.getElementById('oil_wells').innerHTML = filtered.header.length
         document.getElementById('oil_qi').innerHTML =
             data.oil_params.qi.toFixed(2)
         document.getElementById('oil_Di').innerHTML =
@@ -227,6 +251,7 @@
             .toFixed(2)
         document.getElementById('oil_b').innerHTML =
             data.oil_params.b.toFixed(2)
+        document.getElementById('gas_wells').innerHTML = filtered.header.length
         document.getElementById('gas_qi').innerHTML =
             data.gas_params.qi.toFixed(2)
         document.getElementById('gas_Di').innerHTML =
@@ -239,13 +264,20 @@
     function update_data(master)
     {
         var min_month = document.getElementById('from-month').value,
-            max_month = document.getElementById('to-month').value
+            max_month = document.getElementById('to-month').value,
+            operator = document.getElementById('operator').value
 
         var keep = master.month.map(function (w) {
             return w[0].slice(0, 6) >= min_month.slice(0, 6) &&
                    w[0].slice(0, 6) <= max_month.slice(0, 6)
-        }),
-            keepfn = function (v, i) { return keep[i] }
+        })
+
+        if (operator !== 'All')
+            keep = master.header.map(function (w, i) {
+                return keep[i] && w.operator == operator
+            })
+
+        var keepfn = function (v, i) { return keep[i] }
 
         return {
             header: master.header.filter(keepfn),
@@ -269,6 +301,7 @@
     window.onload = function() {
         var daterange = month_range(window.ihs.month)
         fill_date_selectors(daterange)
+        fill_operator_selector(unique_header(window.ihs.header, 'operator'))
 
         filtered = window.ihs
 
@@ -284,8 +317,10 @@
         },
             update_all = function() {
             filtered = update_data(window.ihs)
-            if (filtered.month.length <= 1)
+            if (filtered.month.length == 0) {
+                alert('No wells meeting criteria.')
                 return
+            }
             update_graph()
         }
 
@@ -293,6 +328,8 @@
         document.getElementById('from-month').addEventListener(
                 'change', update_all)
         document.getElementById('to-month').addEventListener(
+                'change', update_all)
+        document.getElementById('operator').addEventListener(
                 'change', update_all)
         document.getElementById('aggregate').addEventListener(
                 'change', update_graph)

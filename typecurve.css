@@ -25,6 +25,12 @@ div.decline-params {
     display: inline-block;
 }
 
+div.decline-params p {
+    margin: 0;
+    padding: 0;
+    padding-bottom: 5px;
+}
+
 div.decline-params.oil {
     float: left;
 }
@@ -35,7 +41,7 @@ div.decline-params.gas {
 
 #control {
     margin: 0 auto;
-    width: 50%;
+    width: 75%;
     text-align: center;
 }
 
