@@ -111,7 +111,7 @@
         }
     }
 
-    function initialize_display(options)
+    function initialize_graph(options)
     {
         options = options || {}
         var width = options.width || 1024,
@@ -201,6 +201,39 @@
         }
 
         return update
+    }
+
+    function initialize_map(options) {
+        var map = L.map('map').setView([32.1, -101.7], 9)
+        L.tileLayer('http://{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {
+            subdomains: ['otile1', 'otile2', 'otile3', 'otile4'],
+            attribution: 'Tiles &copy; MapQuest'
+        }).addTo(map);
+
+        L.control.scale().addTo(map)
+
+        var markers = null
+
+        return function() {
+            if (markers)
+                map.removeLayer(markers)
+
+            markers = new L.MarkerClusterGroup()
+
+            filtered.header.map(function (h) {
+                if (h.lat && h.lon) {
+                    var marker = L.marker([h.lat, h.lon], {
+                        icon: L.divIcon({ className: 'well-marker' }),
+                        title: h.name + ' (API#: ' + h.api + ')',
+                    }).bindPopup('<div class="well-popup"><p>Name: ' +
+                        h.name + '<p>API: ' + h.api + '<p>Operator: '
+                        + h.operator + '</div>')
+                    markers.addLayer(marker)
+                }
+            })
+
+            map.addLayer(markers)
+        }
     }
 
     function fill_operator_selector(ops)
@@ -309,22 +342,28 @@
         filtered = window.ihs
 
         data = compute_typecurves(filtered)
-        var update = initialize_display()
-        update()
+        var update_graph = initialize_graph()
+        update_graph()
         update_results()
+        var update_map = initialize_map()
+        update_map()
 
-        var update_graph = function() {
+        function update_visuals()
+        {
             data = compute_typecurves(filtered, compute_percentile())
-            update()
+            update_graph()
+            update_map()
             update_results()
-        },
-            update_all = function() {
+        }
+
+        function update_all()
+        {
             filtered = update_data(window.ihs)
             if (filtered.month.length == 0) {
                 alert('No wells meeting criteria.')
                 return
             }
-            update_graph()
+            update_visuals()
         }
 
 

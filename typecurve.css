@@ -93,3 +93,37 @@ path.actual {
 path.predicted {
     stroke-width: 2px;
 }
+
+#map-box {
+    border-top: 1px solid black;
+    width: 95%;
+    margin: 0 auto;
+    margin-top: 50px;
+}
+
+#map {
+    width: 800px;
+    height: 600px;
+    margin: 0 auto;
+}
+
+div.well-marker {
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0;
+    padding: 0;
+    border: 2px solid black;
+    background-color: green;
+    border-radius: 50%;
+}
+
+div.well-popup {
+    font-family: 'Gill Sans', 'Gill Sans MT', 'sans-serif';
+    font-size: medium;
+}
+
+div.well-popup p {
+    margin: 0;
+    padding: 0;
+    padding-bottom: 5px;
+}

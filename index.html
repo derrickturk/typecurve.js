@@ -7,8 +7,13 @@
     <script type="text/javascript" src="bestfit.js"></script>
     <script type="text/javascript" src="typecurve.js"></script>
     <script type="text/javascript" src="ihs.json"></script>
-    <script type="text/javascript" src="visualizer.js"></script>
     <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script type="text/javascript" src="markercluster/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" type="text/css" href="markercluster/MarkerCluster.css">
+    <link rel="stylesheet" type="text/css" href="markercluster/MarkerCluster.Default.css">
+    <script type="text/javascript" src="visualizer.js"></script>
     <link rel="stylesheet" type="text/css" href="typecurve.css">
 </head>
 <body>
@@ -48,6 +53,10 @@
             <p>b&nbsp;=&nbsp;<span id="gas_b">2</span>
         </div>
         <div class="breaker"></div>
+    </div>
+    <div id="map-box">
+        <h3>Selected Wells</h3>
+        <div id="map"></div>
     </div>
 </div>
 <div id="footer">
