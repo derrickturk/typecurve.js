@@ -223,13 +223,15 @@
         document.getElementById('oil_qi').innerHTML =
             data.oil_params.qi.toFixed(2)
         document.getElementById('oil_Di').innerHTML =
-            secant_effective(data.oil_params.Di, data.oil_params.b).toFixed(2)
+            (secant_effective(data.oil_params.Di, data.oil_params.b) * 100)
+            .toFixed(2)
         document.getElementById('oil_b').innerHTML =
             data.oil_params.b.toFixed(2)
         document.getElementById('gas_qi').innerHTML =
             data.gas_params.qi.toFixed(2)
         document.getElementById('gas_Di').innerHTML =
-            secant_effective(data.gas_params.Di, data.gas_params.b).toFixed(2)
+            (secant_effective(data.gas_params.Di, data.gas_params.b) * 100)
+            .toFixed(2)
         document.getElementById('gas_b').innerHTML =
             data.gas_params.b.toFixed(2)
     }
