@@ -21,7 +21,8 @@ def main(args, output):
             record = dict()
             record['UID'] = uid
             record['API'] = d['API'] or 'null'
-            record['Name'] = d['Name'].replace("'", r"\'")
+            record['Name'] = d['Name'].replace("'", r"\'") or 'null'
+            record['Operator'] = d['Operator'] or 'null'
             record['Latitude'] = d['Latitude'] or 'null'
             record['Longitude'] = d['Longitude'] or 'null'
             record['Month'] = list()
@@ -42,7 +43,8 @@ def main(args, output):
 
     output.write("{\n\t'header': [")
     output.write(','.join("\n\t\t{ 'uid': '" + w['UID'] + "', 'api': '" +
-        w['API'] + "', 'name': '" + w['Name'] + "', 'lat': " + w['Latitude'] +
+        w['API'] + "', 'name': '" + w['Name'] + "', 'operator': '" +
+        w['Operator'] + "', 'lat': " + w['Latitude'] +
         ", 'lon': " + w['Longitude'] + " }" for w in by_well))
 
     output.write("\n\t],\n\t'month': [")
