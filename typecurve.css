@@ -1,0 +1,69 @@
+body {
+    font-family: 'Gill Sans', 'Gill Sans MT', 'sans-serif'
+}
+
+h1, h2, h3, h4, h5, h6 {
+    text-align: center;
+    font-family: 'Palatino', 'Palatino Linotype', 'serif';
+}
+
+#container {
+    width: 1200px;
+    margin: 0 auto;
+}
+
+#graph {
+    margin: 0 auto;
+}
+
+#params {
+    margin: 0 auto;
+    width: 50%;
+}
+
+div.decline-params {
+    display: inline-block;
+}
+
+div.decline-params.oil {
+    float: left;
+}
+
+div.decline-params.gas {
+    float: right;
+}
+
+.oil {
+    color: green;
+}
+
+.gas {
+    color: red;
+}
+
+div.breaker {
+    clear: both;
+}
+
+.line, .axis path {
+    fill: none;
+    stroke: black;
+    stroke-width: 1.5px;
+}
+
+path.oil {
+    stroke: green;
+}
+
+path.gas {
+    stroke: red;
+}
+
+path.actual {
+    stroke-width: 1px;
+    stroke-dasharray: 10, 10;
+}
+
+path.predicted {
+    stroke-width: 2px;
+}

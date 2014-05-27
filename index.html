@@ -17,17 +17,25 @@
 </div>
 <div id="container">
     <div id="graph"></div>
-    <div id="oil-params" class="decline-params">
-        <p>q<sub>i</sub> = <span id="qi">1000</span> bbl/day
-        <p>D<sub>i</sub> = <span id="Di">95</span>% secant effective / year
-        <p>b = <span id="b">2</span>
+    <div id="params">
+        <div class="decline-params oil">
+            <h3>Oil decline</h3>
+            <p>q<sub>i</sub> = <span id="oil_qi">1000</span> bbl/day
+            <p>D<sub>i</sub> = <span id="oil_Di">95</span>% secant effective / year
+            <p>b = <span id="oil_b">2</span>
+        </div>
+        <div class="decline-params gas">
+            <h3>Gas decline</h3>
+            <p>q<sub>i</sub> = <span id="gas_qi">1000</span> Mcf/day
+            <p>D<sub>i</sub> = <span id="gas_Di">95</span>% secant effective / year
+            <p>b = <span id="gas_b">2</span>
+        </div>
+        <div class="breaker"></div>
     </div>
-    <div id="gas-params" class="decline-params">
-        <p>q<sub>i</sub> = <span id="qi">1000</span> Mcf/day
-        <p>D<sub>i</sub> = <span id="Di">95</span>% secant effective / year
-        <p>b = <span id="b">2</span>
+    <div id="control">
+        <select id="from-month"></select>
+        <select id="to-month"></select>
     </div>
-    <div id="control"></div>
 </div>
 <div id="footer">
     <h5>an experimental production by dwt | <a href="www.terminusdatascience.com">terminus data science, LLC</a></h5>
