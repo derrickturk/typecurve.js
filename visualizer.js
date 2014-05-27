@@ -1,5 +1,6 @@
 ;(function(undefined) {
-    var data = null
+    var data = null,
+        filtered = null
 
     function month_range(data)
     {
@@ -233,13 +234,65 @@
             data.gas_params.b.toFixed(2)
     }
 
+    function update_data(master)
+    {
+        var min_month = document.getElementById('from-month').value,
+            max_month = document.getElementById('to-month').value
+
+        var keep = master.month.map(function (w) {
+            return w[0].slice(0, 6) >= min_month.slice(0, 6) &&
+                   w[0].slice(0, 6) <= max_month.slice(0, 6)
+        }),
+            keepfn = function (v, i) { return keep[i] }
+
+        return {
+            header: master.header.filter(keepfn),
+            month: master.month.filter(keepfn),
+            oil: master.oil.filter(keepfn),
+            gas: master.gas.filter(keepfn),
+            water: master.water.filter(keepfn)
+        }
+    }
+
+    function compute_percentile()
+    {
+        var pct = document.getElementById('aggregate').value
+
+        if (pct[0] == 'P')
+            return 1.0 - Number(pct.slice(1)) / 100
+
+        return undefined
+    }
+
     window.onload = function() {
         var daterange = month_range(window.ihs.month)
         fill_date_selectors(daterange)
 
-        data = compute_typecurves(window.ihs)
+        filtered = window.ihs
+
+        data = compute_typecurves(filtered)
         var update = initialize_display()
         update()
         update_results()
+
+        var update_graph = function() {
+            data = compute_typecurves(filtered, compute_percentile())
+            update()
+            update_results()
+        },
+            update_all = function() {
+            filtered = update_data(window.ihs)
+            if (filtered.month.length <= 1)
+                return
+            update_graph()
+        }
+
+
+        document.getElementById('from-month').addEventListener(
+                'change', update_all)
+        document.getElementById('to-month').addEventListener(
+                'change', update_all)
+        document.getElementById('aggregate').addEventListener(
+                'change', update_graph)
     }
 })()

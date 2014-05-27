@@ -39,6 +39,14 @@ div.decline-params.gas {
     text-align: center;
 }
 
+#control p {
+    display: inline-block;
+}
+
+#control p+p {
+    margin-left: 2em;
+}
+
 .oil {
     color: green;
 }

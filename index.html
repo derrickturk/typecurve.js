@@ -17,6 +17,17 @@
 </div>
 <div id="container">
     <div id="graph"></div>
+    <div id="control">
+        <p>From: <select id="from-month"></select>
+        <p>To: <select id="to-month"></select>
+        <p>Aggregation:
+        <select id="aggregate">
+            <option>Average</option>
+            <option>P90</option>
+            <option>P50</option>
+            <option>P10</option>
+        </select>
+    </div>
     <div id="params">
         <div class="decline-params oil">
             <h3>Oil decline</h3>
@@ -31,10 +42,6 @@
             <p>b = <span id="gas_b">2</span>
         </div>
         <div class="breaker"></div>
-    </div>
-    <div id="control">
-        <p>From: <select id="from-month"></select>
-        <p>To: <select id="to-month"></select>
     </div>
 </div>
 <div id="footer">
