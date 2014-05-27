@@ -1,6 +1,49 @@
 ;(function(undefined) {
     var data = null
 
+    function month_range(data)
+    {
+        return minmax(Array.prototype.concat.apply([], data))
+    }
+
+    function datecode(year, month, day)
+    {
+        day = day || 1
+        month = month || 1
+
+        return year.toString() + (month < 10 ? '0' : '') + month.toString() +
+            (day < 10 ? '0' : '') + day.toString()
+    }
+
+    function min(arr)
+    {
+        return arr.reduce(function (p, v) {
+            if (v < p)
+                return v
+            return p
+        }, arr[0])
+    }
+
+    function max(arr)
+    {
+        return arr.reduce(function (p, v) {
+            if (v > p)
+                return v
+            return p
+        }, arr[0])
+    }
+
+    function minmax(arr)
+    {
+        return arr.reduce(function (p, v) {
+            if (v < p[0])
+                p[0] = v
+            if (v > p[1])
+                p[1] = v
+            return p
+        }, [arr[0], arr[0]])
+    }
+
     function compute_typecurves(data, percentile)
     {
         function to_daily(monthly) { return monthly / 30.4 }
@@ -141,20 +184,41 @@
         return update
     }
 
+    function fill_date_selectors(daterange) {
+        var from_year = Number(daterange[0].slice(0, 4)),
+            to_year = Number(daterange[1].slice(0, 4)),
+            from_month = Number(daterange[0].slice(4, 6)),
+            to_month = Number(daterange[1].slice(4, 6))
+
+        var selectors = [
+            document.getElementById('from-month'),
+            document.getElementById('to-month')
+        ]
+
+        while (from_year < to_year || from_month <= to_month) {
+            for (var i = 0; i < selectors.length; ++i) {
+                var opt = document.createElement('option')
+                opt.text = from_month + '/' + from_year
+                opt.value = datecode(from_year, from_month)
+                selectors[i].add(opt)
+            }
+
+            if (++from_month > 12) {
+                from_month = 1
+                ++from_year
+            }
+        }
+
+        selectors[0].selectedIndex = 0
+        selectors[1].selectedIndex = selectors[1].length - 1
+    }
+
     window.onload = function() {
+        var daterange = month_range(window.ihs.month)
+        fill_date_selectors(daterange)
+
         data = compute_typecurves(window.ihs)
         var update = initialize_display()
         update()
-
-        /*
-        var test = {
-            header: window.ihs.header.slice(0, 10),
-            oil: window.ihs.oil.slice(0, 10),
-            gas: window.ihs.gas.slice(0, 10)
-        }
-
-        data = compute_typecurves(test)
-        update()
-        */
     }
 })()
