@@ -167,11 +167,14 @@
 
         function update() {
             scale_x.domain(d3.extent(data.time))
-            scale_y.domain(d3.extent(data.aggregate_oil.concat(
+            var ydom = d3.extent(data.aggregate_oil.concat(
                 data.aggregate_gas,
                 data.predict_oil_rate,
                 data.predict_gas_rate
-            )))
+            ))
+            if (ydom[0] < 1.0)
+                ydom[0] = 1
+            scale_y.domain(ydom)
 
             axis_x_area.call(axis_x)
             axis_y_area.call(axis_y)
