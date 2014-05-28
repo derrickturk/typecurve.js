@@ -60,6 +60,17 @@
         return 1.0 - Math.pow(b * Di + 1.0, -1.0 / b)
     }
 
+    // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+    function point_in_poly(lat, lng, vertices)
+    {
+        var c = false
+        for (var i = 0, j = vertices.length - 1; i < vertices.length; j = i++)
+            if (((vertices[i].lat > lat) != (vertices[j].lat > lat)) &&
+                    (lng < (vertices[j].lng - vertices[i].lng) * (lat - vertices[i].lat) / (vertices[j].lat - vertices[i].lat) + vertices[i].lng))
+                c = !c
+        return c
+    }
+
     function compute_typecurves(data, percentile)
     {
         function to_daily(monthly) { return monthly / 30.4 }
@@ -203,7 +214,11 @@
         return update
     }
 
-    function initialize_map(options) {
+    function initialize_map(options)
+    {
+        options = options || {}
+        var select_poly = options.select_poly || function (e) {}
+
         var map = L.map('map').setView([32.1, -101.7], 9)
         L.tileLayer('http://{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {
             subdomains: ['otile1', 'otile2', 'otile3', 'otile4'],
@@ -212,27 +227,65 @@
 
         L.control.scale().addTo(map)
 
+        map.addControl(new L.Control.Draw({
+            draw: {
+                marker: false,
+                polyline: false,
+                circle: { shapeOptions: { color: 'blue' } },
+                rectangle: { shapeOptions: { color: 'blue' } },
+                polygon: {
+                    shapeOptions: { color: 'blue' },
+                    allowIntersection: false
+                }
+            },
+            position: 'topright'
+        }))
+
+        var poly_layer = null
+        map.on('draw:created', function (e) {
+            if (poly_layer) {
+                map.removeLayer(poly_layer)
+                select_poly()
+            }
+            poly_layer = e.layer
+            map.addLayer(poly_layer)
+            select_poly(e)
+        })
+        map.on('dblclick', function () {
+            if (poly_layer) {
+                map.removeLayer(poly_layer)
+                select_poly()
+            }
+        })
+
         var markers = null
 
-        return function() {
-            if (markers)
-                map.removeLayer(markers)
+        return {
+            update: function() {
+                if (markers)
+                    map.removeLayer(markers)
 
-            markers = new L.MarkerClusterGroup()
+                markers = new L.MarkerClusterGroup()
 
-            filtered.header.map(function (h) {
-                if (h.lat && h.lon) {
-                    var marker = L.marker([h.lat, h.lon], {
-                        icon: L.divIcon({ className: 'well-marker' }),
-                        title: h.name + ' (API#: ' + h.api + ')',
-                    }).bindPopup('<div class="well-popup"><p>Name: ' +
-                        h.name + '<p>API: ' + h.api + '<p>Operator: '
-                        + h.operator + '</div>')
-                    markers.addLayer(marker)
-                }
-            })
+                filtered.header.map(function (h) {
+                    if (h.lat && h.lon) {
+                        var marker = L.marker([h.lat, h.lon], {
+                            icon: L.divIcon({ className: 'well-marker' }),
+                            title: h.name + ' (API#: ' + h.api + ')',
+                        }).bindPopup('<div class="well-popup"><p>Name: ' +
+                            h.name + '<p>API: ' + h.api + '<p>Operator: '
+                            + h.operator + '</div>')
+                        markers.addLayer(marker)
+                    }
+                })
 
-            map.addLayer(markers)
+                map.addLayer(markers)
+            },
+
+            clear_poly: function() {
+                if (poly_layer)
+                    map.removeLayer(poly_layer)
+            }
         }
     }
 
@@ -297,6 +350,19 @@
             data.gas_params.b.toFixed(2)
     }
 
+    function filter_by_array(master, keep)
+    {
+        var keepfn = function (v, i) { return keep[i] }
+
+        return {
+            header: master.header.filter(keepfn),
+            month: master.month.filter(keepfn),
+            oil: master.oil.filter(keepfn),
+            gas: master.gas.filter(keepfn),
+            water: master.water.filter(keepfn)
+        }
+    }
+
     function update_data(master)
     {
         var min_month = document.getElementById('from-month').value,
@@ -313,15 +379,42 @@
                 return keep[i] && w.operator == operator
             })
 
-        var keepfn = function (v, i) { return keep[i] }
+        return filter_by_array(master, keep)
+    }
 
-        return {
-            header: master.header.filter(keepfn),
-            month: master.month.filter(keepfn),
-            oil: master.oil.filter(keepfn),
-            gas: master.gas.filter(keepfn),
-            water: master.water.filter(keepfn)
-        }
+    function select_circle(master, circ)
+    {
+        var r = circ.getRadius(), center = circ.getLatLng()
+        var keep = master.header.map(function (h) {
+            if (!(h.lat && h.lon))
+                return false
+            var latlng = new L.LatLng(h.lat, h.lon)
+            return latlng.distanceTo(center) <= r
+        })
+
+        return filter_by_array(master, keep)
+    }
+
+    function select_rectangle(master, rect)
+    {
+        var keep = master.header.map(function (h) {
+            if (!(h.lat && h.lon))
+                return false
+            return rect.getBounds().contains(new L.LatLng(h.lat, h.lon))
+        })
+
+        return filter_by_array(master, keep)
+    }
+
+    function select_polygon(master, poly)
+    {
+        var keep = master.header.map(function (h) {
+            if (!(h.lat && h.lon))
+                return false
+            return point_in_poly(h.lat, h.lon, poly.getLatLngs())
+        })
+
+        return filter_by_array(master, keep)
     }
 
     function compute_percentile()
@@ -345,8 +438,37 @@
         var update_graph = initialize_graph()
         update_graph()
         update_results()
-        var update_map = initialize_map()
-        update_map()
+
+        var map_selected
+        function map_select(e)
+        {
+            map_selected = e
+
+            if (e === undefined)
+                filtered = update_data(window.ihs)
+            else if (e.layerType === 'circle')
+                filtered = select_circle(filtered, e.layer)
+            else if (e.layerType === 'rectangle')
+                filtered = select_rectangle(filtered, e.layer)
+            else if (e.layerType === 'polygon')
+                filtered = select_polygon(filtered, e.layer)
+            else {
+                update_map.clear_poly()
+                return
+            }
+
+            if (filtered.month.length == 0) {
+                alert('No wells meeting criteria.')
+                update_map.clear_poly()
+                return
+            }
+
+            update_visuals()
+            update_map.update()
+        }
+
+        var update_map = initialize_map({ select_poly: map_select })
+        update_map.update()
 
         function update_visuals()
         {
@@ -362,10 +484,14 @@
                 alert('No wells meeting criteria.')
                 return
             }
-            update_visuals()
-            update_map()
-        }
 
+            if (map_selected)
+                map_select(map_selected)
+            else {
+                update_visuals()
+                update_map.update()
+            }
+        }
 
         document.getElementById('from-month').addEventListener(
                 'change', update_all)
