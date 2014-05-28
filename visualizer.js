@@ -251,7 +251,7 @@
             map.addLayer(poly_layer)
             select_poly(e)
         })
-        map.on('dblclick', function () {
+        map.on('click', function () {
             if (poly_layer) {
                 map.removeLayer(poly_layer)
                 select_poly()
@@ -459,7 +459,6 @@
 
             if (filtered.month.length == 0) {
                 alert('No wells meeting criteria.')
-                update_map.clear_poly()
                 return
             }
 
