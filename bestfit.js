@@ -34,7 +34,12 @@
     function initial_simplex(rate, time)
     {
         var qi_guess = rate[0],
-            Di_guess = (rate[0] - rate[1]) / (time[1] - time[0]) / rate[0]
+            peak_month = maxdex(rate),
+            Di_guess = (peak_month != rate.length - 1) ?
+                (rate[peak_month] - rate[peak_month + 1]) /
+                (time[peak_month + 1] - time[peak_month]) /
+                rate[peak_month]
+                : 2.0
 
         return [
             [qi_guess * 0.25, Di_guess * 0.5, 1.3],
