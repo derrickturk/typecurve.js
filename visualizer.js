@@ -67,37 +67,38 @@
         var normalized
         if (!percentile)
             normalized = typecurve.meanProduction(data.oil, [ data.gas ],
-                { shift_to_peak: true })
+                { shift_to_peak: true, drop_zeros: true })
         else
             normalized = typecurve.percentileProduction(data.oil, [ data.gas ],
-                percentile, { shift_to_peak: true })
+                percentile, { shift_to_peak: true, drop_zeros: true })
 
-        var time = typecurve.iota(0, normalized.major.length),
-        oil_tc = typecurve.bestHyperbolicFromIntervalVolumes(
-            normalized.major, time),
-        gas_tc = typecurve.bestHyperbolicFromIntervalVolumes(
-            normalized.minor[0], time)
+        var oil_time = typecurve.iota(0, normalized.major.length),
+            gas_time = typecurve.iota(0, normalized.minor[0].length),
+            oil_tc = typecurve.bestHyperbolicFromIntervalVolumes(
+                normalized.major, oil_time),
+            gas_tc = typecurve.bestHyperbolicFromIntervalVolumes(
+                normalized.minor[0], gas_time)
 
-        var predict_oil = new Array(time.length)
-        for (var i = 0; i < time.length; ++i) {
-            predict_oil[i] = oil_tc.cumulative(time[i] + 1)
-                - oil_tc.cumulative(time[i])
+        var predict_oil = new Array(oil_time.length)
+        for (var i = 0; i < oil_time.length; ++i) {
+            predict_oil[i] = oil_tc.cumulative(oil_time[i] + 1)
+                - oil_tc.cumulative(oil_time[i])
         }
 
-        var predict_gas = new Array(time.length)
-        for (var i = 0; i < time.length; ++i) {
-            predict_gas[i] = gas_tc.cumulative(time[i] + 1)
-                - gas_tc.cumulative(time[i])
+        var predict_gas = new Array(gas_time.length)
+        for (var i = 0; i < gas_time.length; ++i) {
+            predict_gas[i] = gas_tc.cumulative(gas_time[i] + 1)
+                - gas_tc.cumulative(gas_time[i])
         }
 
         return {
-            time: time,
+            time: oil_time,
             aggregate_oil: normalized.major.map(to_daily),
             aggregate_gas: normalized.minor[0].map(to_daily),
             predict_oil: predict_oil.map(to_daily),
             predict_gas: predict_gas.map(to_daily),
-            predict_oil_rate: time.map(oil_tc.rate, oil_tc).map(to_daily),
-            predict_gas_rate: time.map(gas_tc.rate, gas_tc).map(to_daily),
+            predict_oil_rate: oil_time.map(oil_tc.rate, oil_tc).map(to_daily),
+            predict_gas_rate: gas_time.map(gas_tc.rate, gas_tc).map(to_daily),
             oil_params: {
                 qi: oil_tc.qi / 30.4,
                 Di: oil_tc.Di * 12,
