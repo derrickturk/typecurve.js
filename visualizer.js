@@ -352,7 +352,6 @@
         {
             data = compute_typecurves(filtered, compute_percentile())
             update_graph()
-            update_map()
             update_results()
         }
 
@@ -364,6 +363,7 @@
                 return
             }
             update_visuals()
+            update_map()
         }
 
 
@@ -374,6 +374,6 @@
         document.getElementById('operator').addEventListener(
                 'change', update_all)
         document.getElementById('aggregate').addEventListener(
-                'change', update_graph)
+                'change', update_visuals)
     }
 })()
