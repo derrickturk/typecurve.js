@@ -251,7 +251,7 @@
             map.addLayer(poly_layer)
             select_poly(e)
         })
-        map.on('click', function () {
+        map.on('dblclick', function () {
             if (poly_layer) {
                 map.removeLayer(poly_layer)
                 select_poly()
