@@ -1,7 +1,4 @@
 ;(function(undefined) {
-    var data = null,
-        filtered = null
-
     function month_range(data)
     {
         return minmax(Array.prototype.concat.apply([], data))
@@ -109,6 +106,8 @@
             predict_gas: predict_gas.map(to_daily),
             predict_oil_rate: time.map(oil_tc.rate, oil_tc).map(to_daily),
             predict_gas_rate: time.map(gas_tc.rate, gas_tc).map(to_daily),
+            oil_numwells: data.header.length,
+            gas_numwells: data.header.length,
             oil_params: {
                 qi: oil_tc.qi / 30.4,
                 Di: oil_tc.Di * 12,
@@ -176,7 +175,7 @@
             predict_gas = plot_area.append('svg:path')
                 .attr('class', 'line gas predicted')
 
-        function update() {
+        function update(data) {
             scale_x.domain(d3.extent(data.time))
             var ydom = d3.extent(data.aggregate_oil.concat(
                 data.aggregate_gas,
@@ -261,13 +260,13 @@
         var markers = null
 
         return {
-            update: function() {
+            update: function(data) {
                 if (markers)
                     map.removeLayer(markers)
 
                 markers = new L.MarkerClusterGroup()
 
-                filtered.header.map(function (h) {
+                data.header.map(function (h) {
                     if (h.lat && h.lon) {
                         var marker = L.marker([h.lat, h.lon], {
                             icon: L.divIcon({ className: 'well-marker' }),
@@ -331,8 +330,9 @@
         selectors[1].selectedIndex = selectors[1].length - 1
     }
 
-    function update_results() {
-        document.getElementById('oil_wells').innerHTML = filtered.header.length
+    function update_results(data)
+    {
+        document.getElementById('oil_wells').innerHTML = data.oil_numwells
         document.getElementById('oil_qi').innerHTML =
             data.oil_params.qi.toFixed(2)
         document.getElementById('oil_Di').innerHTML =
@@ -340,7 +340,7 @@
             .toFixed(2)
         document.getElementById('oil_b').innerHTML =
             data.oil_params.b.toFixed(2)
-        document.getElementById('gas_wells').innerHTML = filtered.header.length
+        document.getElementById('gas_wells').innerHTML = data.gas_numwells
         document.getElementById('gas_qi').innerHTML =
             data.gas_params.qi.toFixed(2)
         document.getElementById('gas_Di').innerHTML =
@@ -361,25 +361,6 @@
             gas: master.gas.filter(keepfn),
             water: master.water.filter(keepfn)
         }
-    }
-
-    function update_data(master)
-    {
-        var min_month = document.getElementById('from-month').value,
-            max_month = document.getElementById('to-month').value,
-            operator = document.getElementById('operator').value
-
-        var keep = master.month.map(function (w) {
-            return w[0].slice(0, 6) >= min_month.slice(0, 6) &&
-                   w[0].slice(0, 6) <= max_month.slice(0, 6)
-        })
-
-        if (operator !== 'All')
-            keep = master.header.map(function (w, i) {
-                return keep[i] && w.operator == operator
-            })
-
-        return filter_by_array(master, keep)
     }
 
     function select_circle(master, circ)
@@ -417,88 +398,170 @@
         return filter_by_array(master, keep)
     }
 
-    function compute_percentile()
+    function apply_filters(master, operator, daterange, shape)
     {
-        var pct = document.getElementById('aggregate').value
+        var filtered = master
 
-        if (pct[0] == 'P')
-            return 1.0 - Number(pct.slice(1)) / 100
+        if (operator && operator !== 'All') {
+            keep = filtered.header.map(function (w, i) {
+                return keep[i] && w.operator == operator
+            })
+            filtered = filter_by_array(filtered, keep)
+        }
+
+        if (daterange) {
+            var keep = filtered.month.map(function (w) {
+                return w[0].slice(0, 6) >= daterange[0].slice(0, 6) &&
+                       w[0].slice(0, 6) <= daterange[1].slice(0, 6)
+            })
+            filtered = filter_by_array(filtered, keep)
+        }
+
+        if (shape) {
+            if (e.layerType === 'circle')
+                filtered = select_circle(filtered, e.layer)
+            else if (e.layerType === 'rectangle')
+                filtered = select_rectangle(filtered, e.layer)
+            else if (e.layerType === 'polygon')
+                filtered = select_polygon(filtered, e.layer)
+        }
+
+        return filtered
+    }
+
+    function compute_percentile(text)
+    {
+        if (text[0] == 'P')
+            return 1.0 - Number(text.slice(1)) / 100
 
         return undefined
     }
+
+    var dispatcher = new machina.Machina(
+        {
+            master: window.ihs,
+            filtered: window.ihs,
+            data: null,
+            daterange: [ null, null ],
+            operator: null,
+            shape: null,
+            aggregation: undefined,
+            graph_update: null,
+            map_update: null,
+            map_clear_shape: null,
+            results_update: update_results
+        },
+        {
+            initialize: function(state) {
+                state.graph_update = initialize_graph()
+                var mapfns = initialize_map(function (e) {
+                    if (e === undefined) {
+                        state.map_clear_shape()
+                        this.dispatch('filterChange')
+                    } else {
+                        this.dispatch('filterChange', { shape: e })
+                    }
+                })
+                state.map_update = mapfns.update
+                state.map_clear_shape = mapfns.clear_poly
+
+                return ['calculate', { filter_changed: true }]
+            },
+
+            calculate: function(state, args) {
+                state.data = compute_typecurves(state.filtered,
+                    state.aggregation)
+                return ['update', args]
+            },
+
+            update: function(state, args) {
+                state.graph_update(state.data)
+                state.results_update(state.data)
+
+                if (args.filter_changed) {
+                    state.map_update(state.filtered)
+                }
+
+                return null
+            },
+
+            aggregationChange: function(state, args) {
+                state.aggregation = args.percentile
+                return ['calculate', undefined]
+            },
+
+            filterChange: function(state, args) {
+                var operator = state.operator,
+                    daterange = state.daterange,
+                    shape = state.shape
+
+                if (args.operator !== undefined) {
+                    operator = args.operator
+                }
+
+                if (args.daterange !== undefined) {
+                    daterange = args.daterange
+                }
+
+                if (args.shape !== undefined) {
+                    shape = args.shape
+                }
+
+                var filtered = apply_filters(state.master, operator, daterange,
+                        shape)
+
+                if (filtered.header.length == 0) {
+                    alert('No wells meet criteria!')
+                    args.fail && args.fail()
+                    return null
+                }
+
+                state.filtered = filtered
+                state.operator = operator
+                state.daterange = daterange
+                state.shape = shape
+
+                return ['calculate', { filter_changed: true }]
+            }
+        }
+    )
 
     window.onload = function() {
         var daterange = month_range(window.ihs.month)
         fill_date_selectors(daterange)
         fill_operator_selector(unique_header(window.ihs.header, 'operator'))
 
-        filtered = window.ihs
-
-        data = compute_typecurves(filtered)
-        var update_graph = initialize_graph()
-        update_graph()
-        update_results()
-
-        var map_selected
-        function map_select(e)
+        function get_date_range()
         {
-            map_selected = e
-
-            if (e === undefined)
-                filtered = update_data(window.ihs)
-            else if (e.layerType === 'circle')
-                filtered = select_circle(filtered, e.layer)
-            else if (e.layerType === 'rectangle')
-                filtered = select_rectangle(filtered, e.layer)
-            else if (e.layerType === 'polygon')
-                filtered = select_polygon(filtered, e.layer)
-            else {
-                update_map.clear_poly()
-                return
-            }
-
-            if (filtered.month.length == 0) {
-                alert('No wells meeting criteria.')
-                return
-            }
-
-            update_visuals()
-            update_map.update()
+            var from = document.getElementById('from_month'),
+                to   = document.getElementById('to_month')
         }
 
-        var update_map = initialize_map({ select_poly: map_select })
-        update_map.update()
+        document.getElementById('from-month').addEventListener('change',
+                function (e) {
+                    dispatcher.dispatch('filterChange', {
+                        daterange: get_date_range()
+                    })
+                })
+        document.getElementById('to-month').addEventListener('change',
+                function (e) {
+                    dispatcher.dispatch('filterChange', {
+                        daterange: get_date_range()
+                    })
+                })
+        document.getElementById('operator').addEventListener('change',
+                function (e) {
+                    dispatcher.dispatch('filterChange', {
+                        operator: e.target.value
+                    })
+                })
+        document.getElementById('aggregate').addEventListener('change',
+                function (e) {
+                    dispatcher.dispatch('aggregationChange', {
+                        percentile: compute_percentile(e.target.value)
+                    })
+                })
 
-        function update_visuals()
-        {
-            data = compute_typecurves(filtered, compute_percentile())
-            update_graph()
-            update_results()
-        }
-
-        function update_all()
-        {
-            filtered = update_data(window.ihs)
-            if (filtered.month.length == 0) {
-                alert('No wells meeting criteria.')
-                return
-            }
-
-            if (map_selected)
-                map_select(map_selected)
-            else {
-                update_visuals()
-                update_map.update()
-            }
-        }
-
-        document.getElementById('from-month').addEventListener(
-                'change', update_all)
-        document.getElementById('to-month').addEventListener(
-                'change', update_all)
-        document.getElementById('operator').addEventListener(
-                'change', update_all)
-        document.getElementById('aggregate').addEventListener(
-                'change', update_visuals)
+        dispatcher.dispatch('initialize')
     }
 })()

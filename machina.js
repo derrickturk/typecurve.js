@@ -7,9 +7,10 @@
         this.events = events
     }
 
-    Machina.prototype.dispatch = function(e)
+    Machina.prototype.dispatch = function(e, args)
     {
-        while (e = events[e](globals))
+        var next = [e, args]
+        while (next = this.events[next[0]].call(this, this.state, next[1]));
     }
 
     ns.Machina = Machina
