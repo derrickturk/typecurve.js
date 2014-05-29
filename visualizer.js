@@ -400,17 +400,18 @@
 
     function apply_filters(master, operator, daterange, shape)
     {
-        var filtered = master
+        var filtered = master,
+            keep
 
         if (operator && operator !== 'All') {
             keep = filtered.header.map(function (w, i) {
-                return keep[i] && w.operator == operator
+                return w.operator == operator
             })
             filtered = filter_by_array(filtered, keep)
         }
 
         if (daterange) {
-            var keep = filtered.month.map(function (w) {
+            keep = filtered.month.map(function (w) {
                 return w[0].slice(0, 6) >= daterange[0].slice(0, 6) &&
                        w[0].slice(0, 6) <= daterange[1].slice(0, 6)
             })
@@ -418,12 +419,12 @@
         }
 
         if (shape) {
-            if (e.layerType === 'circle')
-                filtered = select_circle(filtered, e.layer)
-            else if (e.layerType === 'rectangle')
-                filtered = select_rectangle(filtered, e.layer)
-            else if (e.layerType === 'polygon')
-                filtered = select_polygon(filtered, e.layer)
+            if (shape.layerType === 'circle')
+                filtered = select_circle(filtered, shape.layer)
+            else if (shape.layerType === 'rectangle')
+                filtered = select_rectangle(filtered, shape.layer)
+            else if (shape.layerType === 'polygon')
+                filtered = select_polygon(filtered, shape.layer)
         }
 
         return filtered
@@ -437,12 +438,22 @@
         return undefined
     }
 
+    function set_working()
+    {
+        document.getElementById('working').style.display = 'inherit'
+    }
+
+    function set_not_working()
+    {
+        document.getElementById('working').style.display = 'none'
+    }
+
     var dispatcher = new machina.Machina(
         {
             master: window.ihs,
             filtered: window.ihs,
             data: null,
-            daterange: [ null, null ],
+            daterange: null,
             operator: null,
             shape: null,
             aggregation: undefined,
@@ -452,14 +463,28 @@
             results_update: update_results
         },
         {
-            initialize: function(state) {
+            initialize: function(state, args) {
+                var machina = this
+
+                if (!(args && args.working)) {
+                    set_working()
+                    window.setTimeout(function () {
+                        args = args || {}
+                        args.working = true
+                        machina.dispatch('initialize', args)
+                    }, 4)
+                    return null
+                }
+
                 state.graph_update = initialize_graph()
-                var mapfns = initialize_map(function (e) {
-                    if (e === undefined) {
-                        state.map_clear_shape()
-                        this.dispatch('filterChange')
-                    } else {
-                        this.dispatch('filterChange', { shape: e })
+                var mapfns = initialize_map({
+                    select_poly: function (e) {
+                        if (e === undefined) {
+                            state.map_clear_shape()
+                            machina.dispatch('filterChange', { shape: null })
+                        } else {
+                            machina.dispatch('filterChange', { shape: e })
+                        }
                     }
                 })
                 state.map_update = mapfns.update
@@ -478,11 +503,11 @@
                 state.graph_update(state.data)
                 state.results_update(state.data)
 
-                if (args.filter_changed) {
+                if (args && args.filter_changed) {
                     state.map_update(state.filtered)
                 }
 
-                return null
+                return ['done', undefined]
             },
 
             aggregationChange: function(state, args) {
@@ -491,6 +516,18 @@
             },
 
             filterChange: function(state, args) {
+                var machina = this
+                args = args || {}
+
+                if (!(args && args.working)) {
+                    set_working()
+                    window.setTimeout(function () {
+                        args.working = true
+                        machina.dispatch('filterChange', args)
+                    }, 25)
+                    return null
+                }
+
                 var operator = state.operator,
                     daterange = state.daterange,
                     shape = state.shape
@@ -513,7 +550,7 @@
                 if (filtered.header.length == 0) {
                     alert('No wells meet criteria!')
                     args.fail && args.fail()
-                    return null
+                    return ['done', undefined]
                 }
 
                 state.filtered = filtered
@@ -522,6 +559,11 @@
                 state.shape = shape
 
                 return ['calculate', { filter_changed: true }]
+            },
+
+            done: function() {
+                set_not_working()
+                return null;
             }
         }
     )
@@ -533,8 +575,10 @@
 
         function get_date_range()
         {
-            var from = document.getElementById('from_month'),
-                to   = document.getElementById('to_month')
+            var from = document.getElementById('from-month'),
+                to   = document.getElementById('to-month')
+
+            return [from.value, to.value]
         }
 
         document.getElementById('from-month').addEventListener('change',

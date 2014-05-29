@@ -95,6 +95,7 @@ path.predicted {
 }
 
 #map-box {
+    position: relative;
     border-top: 1px solid black;
     width: 95%;
     margin: 0 auto;
@@ -126,4 +127,34 @@ div.well-popup p {
     margin: 0;
     padding: 0;
     padding-bottom: 5px;
+}
+
+html, body {
+    min-height: 100%;
+}
+
+#working {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    height: 0;
+    width: 100%;
+    height: 100%;
+    background-color: blue;
+    z-index: 9001;
+    opacity: 0.75;
+    display: none;
+}
+
+#working p {
+    position: relative;
+    top: 50%;
+    text-align: center;
+    vertical-align: middle;
+    padding: 0;
+    margin: 0;
+    margin-top: -64pt;
+    font-size: 128pt;
+    color: white;
 }
