@@ -8,6 +8,8 @@
 
     Decline.prototype.eur = function(econ_limit, t_max)
     {
+        t_max = t_max || Infinity
+
         var t_eur = Math.min(this.timeToRate(econ_limit), t_max)
         return this.cumulative(t_eur)
     }
