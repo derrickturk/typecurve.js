@@ -483,7 +483,10 @@
                             state.map_clear_shape()
                             machina.dispatch('filterChange', { shape: null })
                         } else {
-                            machina.dispatch('filterChange', { shape: e })
+                            machina.dispatch('filterChange', {
+                                shape: e,
+                                fail: function () { state.map_clear_shape() }
+                            })
                         }
                     }
                 })
@@ -548,8 +551,8 @@
                         shape)
 
                 if (filtered.header.length == 0) {
-                    alert('No wells meet criteria!')
                     args.fail && args.fail()
+                    alert('No wells meet criteria!')
                     return ['done', undefined]
                 }
 
@@ -581,24 +584,67 @@
             return [from.value, to.value]
         }
 
-        document.getElementById('from-month').addEventListener('change',
+        var from_sel = document.getElementById('from-month'),
+            to_sel = document.getElementById('to-month'),
+            op_sel = document.getElementById('operator'),
+            from_prev = from_sel.selectedIndex,
+            to_prev = to_sel.selectedIndex,
+            op_prev = op_sel.selectedIndex
+
+        from_sel.addEventListener('focus',
                 function (e) {
+                    from_prev = e.target.selectedIndex
+                })
+
+        to_sel.addEventListener('focus',
+                function (e) {
+                    to_prev = e.target.selectedIndex
+                })
+
+        op_sel.addEventListener('focus',
+                function (e) {
+                    op_prev = e.target.selectedIndex
+                })
+
+        from_sel.addEventListener('change',
+                function (e) {
+                    var initial_prev = from_prev
+                    from_prev = e.target.selectedIndex
                     dispatcher.dispatch('filterChange', {
-                        daterange: get_date_range()
+                        daterange: get_date_range(),
+                        fail: function () {
+                            e.target.selectedIndex = initial_prev
+                            from_prev = initial_prev
+                        }
                     })
                 })
-        document.getElementById('to-month').addEventListener('change',
+
+        to_sel.addEventListener('change',
                 function (e) {
+                    var initial_prev = to_prev
+                    to_prev = e.target.selectedIndex
                     dispatcher.dispatch('filterChange', {
-                        daterange: get_date_range()
+                        daterange: get_date_range(),
+                        fail: function () {
+                            e.target.selectedIndex = initial_prev
+                            to_prev = initial_prev
+                        }
                     })
                 })
-        document.getElementById('operator').addEventListener('change',
+
+        op_sel.addEventListener('change',
                 function (e) {
+                    var initial_prev = op_prev
+                    op_prev = e.target.selectedIndex
                     dispatcher.dispatch('filterChange', {
-                        operator: e.target.value
+                        operator: e.target.value,
+                        fail: function () {
+                            e.target.selectedIndex = initial_prev
+                            op_prev = initial_prev
+                        }
                     })
                 })
+
         document.getElementById('aggregate').addEventListener('change',
                 function (e) {
                     dispatcher.dispatch('aggregationChange', {
