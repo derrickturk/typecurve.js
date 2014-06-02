@@ -740,9 +740,9 @@
             })
         }
 
-        el_in.addEventListener('change', updateEUR)
-        tl_in.addEventListener('change', updateEUR)
-        df_in.addEventListener('change', updateEUR)
+        el_in.addEventListener('input', updateEUR)
+        tl_in.addEventListener('input', updateEUR)
+        df_in.addEventListener('input', updateEUR)
 
         dispatcher.dispatch('initialize', {
             oil_el: new Number(el_in.value),
