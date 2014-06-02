@@ -440,12 +440,14 @@
 
     function set_working()
     {
+        document.body.style.cursor = 'wait'
         document.getElementById('working').style.display = 'inherit'
     }
 
     function set_not_working()
     {
         document.getElementById('working').style.display = 'none'
+        document.body.style.cursor = 'auto'
     }
 
     var dispatcher = new machina.Machina(
