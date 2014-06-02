@@ -57,6 +57,11 @@
         return 1.0 - Math.pow(b * Di + 1.0, -1.0 / b)
     }
 
+    function nominal_from_tangent(D)
+    {
+        return -Math.log(1.0 - D)
+    }
+
     // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
     function point_in_poly(lat, lng, vertices)
     {
@@ -118,6 +123,28 @@
                 Di: gas_tc.Di * 12,
                 b: gas_tc.b
             }
+        }
+    }
+
+    function compute_eur(data, oil_el, max_time, d_final)
+    {
+        var oil = new typecurve.ModHyperbolic(
+                data.oil_params.qi,
+                data.oil_params.Di,
+                data.oil_params.b,
+                d_final),
+            gas = new typecurve.ModHyperbolic(
+                data.gas_params.qi,
+                data.gas_params.Di,
+                data.gas_params.b,
+                d_final)
+        var oil_eur = oil.eur(oil_el, max_time),
+            oil_time = oil.timeToCumulative(oil_eur),
+            gas_eur = gas.cumulative(oil_time)
+
+        return {
+            oil: oil_eur * 365.25 / 1000.0,
+            gas: gas_eur * 365.25 / 1000.0
         }
     }
 
@@ -330,7 +357,7 @@
         selectors[1].selectedIndex = selectors[1].length - 1
     }
 
-    function update_results(data)
+    function update_results(data, eur)
     {
         document.getElementById('oil_wells').innerHTML = data.oil_numwells
         document.getElementById('oil_qi').innerHTML =
@@ -340,6 +367,7 @@
             .toFixed(2)
         document.getElementById('oil_b').innerHTML =
             data.oil_params.b.toFixed(2)
+        document.getElementById('oil_eur').innerHTML = eur.oil.toFixed(2)
         document.getElementById('gas_wells').innerHTML = data.gas_numwells
         document.getElementById('gas_qi').innerHTML =
             data.gas_params.qi.toFixed(2)
@@ -348,6 +376,7 @@
             .toFixed(2)
         document.getElementById('gas_b').innerHTML =
             data.gas_params.b.toFixed(2)
+        document.getElementById('gas_eur').innerHTML = eur.gas.toFixed(2)
     }
 
     function filter_by_array(master, keep)
@@ -459,6 +488,9 @@
             operator: null,
             shape: null,
             aggregation: undefined,
+            oil_el: 0,
+            max_time: Infinity,
+            d_final: 0.0,
             graph_update: null,
             map_update: null,
             map_clear_shape: null,
@@ -477,6 +509,10 @@
                     }, 4)
                     return null
                 }
+
+                state.oil_el = args.oil_el || state.oil_el
+                state.max_time = args.max_time || state.max_time
+                state.d_final = args.d_final || state.d_final
 
                 state.graph_update = initialize_graph()
                 var mapfns = initialize_map({
@@ -501,12 +537,18 @@
             calculate: function(state, args) {
                 state.data = compute_typecurves(state.filtered,
                     state.aggregation)
+                return ['calculate_eur', args]
+            },
+
+            calculate_eur: function(state, args) {
+                state.eur = compute_eur(state.data,
+                        state.oil_el, state.max_time, state.d_final)
                 return ['update', args]
             },
 
             update: function(state, args) {
                 state.graph_update(state.data)
-                state.results_update(state.data)
+                state.results_update(state.data, state.eur)
 
                 if (args && args.filter_changed) {
                     state.map_update(state.filtered)
@@ -518,6 +560,16 @@
             aggregationChange: function(state, args) {
                 state.aggregation = args.percentile
                 return ['calculate', undefined]
+            },
+
+            eurChange: function(state, args) {
+                args = args || {}
+
+                state.oil_el = args.oil_el || state.oil_el
+                state.max_time = args.max_time || state.max_time
+                state.d_final = args.d_final || state.d_final
+
+                return ['calculate_eur', undefined]
             },
 
             filterChange: function(state, args) {
@@ -654,6 +706,48 @@
                     })
                 })
 
-        dispatcher.dispatch('initialize')
+        var el_in = document.getElementById('econ-limit'),
+            tl_in = document.getElementById('time-limit'),
+            df_in = document.getElementById('d-final')
+
+        el_in.addEventListener('input', function (e) {
+            var n = new Number(e.target.value).valueOf()
+            if (n != n || n < 0)
+                e.target.value = "1.0"
+                e.preventDefault()
+        })
+
+        tl_in.addEventListener('input', function (e) {
+            var n = new Number(e.target.value).valueOf()
+            if (n != n || n < 0)
+                e.target.value = "30.0"
+                e.preventDefault()
+        })
+
+        df_in.addEventListener('input', function (e) {
+            var n = new Number(e.target.value).valueOf()
+            if (n != n || n < 0 || n > 100)
+                e.target.value = "5.0"
+                e.preventDefault()
+        })
+
+        function updateEUR()
+        {
+            dispatcher.dispatch('eurChange', {
+                oil_el: new Number(el_in.value),
+                max_time: new Number(tl_in.value),
+                d_final: nominal_from_tangent(new Number(df_in.value) / 100.0)
+            })
+        }
+
+        el_in.addEventListener('change', updateEUR)
+        tl_in.addEventListener('change', updateEUR)
+        df_in.addEventListener('change', updateEUR)
+
+        dispatcher.dispatch('initialize', {
+            oil_el: new Number(el_in.value),
+            max_time: new Number(tl_in.value),
+            d_final: nominal_from_tangent(new Number(df_in.value) / 100.0)
+        })
     }
 })()
