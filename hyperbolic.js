@@ -88,4 +88,43 @@
         return this.qi / this.Di * Math.log(1.0 + this.Di * t)
     }
 
+    /* Arps "modified hyperbolic" decline with
+     *     initial rate qi [vol/time]
+     *     initial nominal decline Di [1/time]
+     *     hyperbolic exponent b [1]
+     *     terminal nominal decline Df [1/time]
+     */
+    ns.ModHyperbolic = function(qi, Di, b, Df)
+    {
+        this.qi = qi
+        this.Di = Di
+        this.b = b
+        this.Df = Df
+        if (Df <= 0 || Df > Di) {
+            this.transition = Infinity
+            this.q_transition = 0
+            this.terminal = null 
+        } else {
+            this.transition = (Di / Df - 1.0) / (b * Di)
+            this.q_transition = ns.Hyperbolic.prototype.rate.call(this,
+                    this.transition)
+            this.terminal = new ns.Exponential(this.q_transition, this.Df)
+        }
+    }
+
+    ns.ModHyperbolic.prototype.rate = function(t)
+    {
+        if (t <= this.transition)
+            return ns.Hyperbolic.prototype.rate.call(this, t)
+        return this.terminal.rate(t - this.transition)
+    }
+
+    ns.ModHyperbolic.prototype.cumulative = function(t)
+    {
+        if (t <= this.transition)
+            return ns.Hyperbolic.prototype.cumulative.call(this, t)
+        return this.cumulative(this.transition) +
+          this.terminal.cumulative(t - this.transition)
+    }
+
 })(window.typecurve = window.typecurve || {})
