@@ -1,3 +1,10 @@
+html, body {
+    margin: 0 auto;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+}
+
 body {
     font-family: 'Gill Sans', 'Gill Sans MT', 'sans-serif'
 }
@@ -5,6 +12,35 @@ body {
 h1, h2, h3, h4, h5, h6 {
     text-align: center;
     font-family: 'Palatino', 'Palatino Linotype', 'serif';
+}
+
+#header {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    background-color: purple;
+}
+
+#header h1, #header h2 {
+    color: white;
+    font-family: 'Gill Sans Condensed', 'Gill Sans MT Condensed',
+                 'Gill Sans', 'Gill Sans MT', 'sans-serif';
+}
+
+#header h1 {
+    margin: 0;
+    padding; 0;
+    padding-top: 10px;
+    padding-left: 1em;
+    text-align: left;
+}
+
+#header h2 {
+    margin: 0;
+    padding: 0;
+    padding-right: 1em;
+    padding-bottom: 10px;
+    float: right;
 }
 
 #container {
@@ -20,15 +56,18 @@ h1, h2, h3, h4, h5, h6 {
 
 #graph svg {
     margin: 0 auto;
+    margin-left: -80px;
 }
 
 #params {
     margin: 0 auto;
-    width: 50%;
+    width: 60%;
+    text-align: center;
 }
 
 div.decline-params {
     display: inline-block;
+    text-align: left;
 }
 
 div.decline-params p {
@@ -43,6 +82,16 @@ div.decline-params.oil {
 
 div.decline-params.gas {
     float: right;
+}
+
+#eur-options {
+    margin: 0 auto;
+}
+
+#eur-options input {
+    float: right;
+    text-align: right;
+    margin-left: 1em;
 }
 
 #control {
@@ -127,10 +176,6 @@ div.well-popup p {
     margin: 0;
     padding: 0;
     padding-bottom: 5px;
-}
-
-html, body {
-    min-height: 100%;
 }
 
 #working {

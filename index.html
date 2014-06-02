@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title>IHS typecurve visualizer</title>
     <script type="text/javascript" src="hyperbolic.js"></script>
+    <script type="text/javascript" src="convex.js"></script>
     <script type="text/javascript" src="bestfit.js"></script>
     <script type="text/javascript" src="typecurve.js"></script>
     <script type="text/javascript" src="ihs.json"></script>
@@ -22,9 +23,12 @@
 <body>
 <div id="working"><p>Working...</div>
 <div id="header">
-    <h1>IHS Data: Typecurve Visualizer</h1>
+    <h1>PIVoT</h1>
+    <h2>{ Permian Interactive Visualization of Typecurves }</h2>
+    <div class="breaker"></div>
 </div>
 <div id="container">
+    <h2>Selected Wells Typecurve</h2>
     <div id="graph"></div>
     <div id="control">
         <p>From: <select id="from-month"></select>
@@ -48,6 +52,7 @@
             <p>q<sub>i</sub>&nbsp;=&nbsp;<span id="oil_qi">1000</span>&nbsp;bbl/day
             <p>D<sub>i</sub>&nbsp;=&nbsp;<span id="oil_Di">95</span>%&nbsp;sec.&nbsp;eff.&nbsp;/&nbsp;year
             <p>b&nbsp;=&nbsp;<span id="oil_b">2</span>
+            <p>EUR&nbsp;=&nbsp;<span id="oil_eur">100</span>&nbsp;Mstb
         </div>
         <div class="decline-params gas">
             <h3>Gas decline</h3>
@@ -55,11 +60,21 @@
             <p>q<sub>i</sub>&nbsp;=&nbsp;<span id="gas_qi">1000</span>&nbsp;Mcf/day
             <p>D<sub>i</sub>&nbsp;=&nbsp;<span id="gas_Di">95</span>%&nbsp;sec.&nbsp;eff.&nbsp;/&nbsp;year
             <p>b&nbsp;=&nbsp;<span id="gas_b">2</span>
+            <p>EUR&nbsp;=&nbsp;<span id="gas_eur">100</span>&nbsp;MMscf
+        </div>
+        <div class="decline-params" id="eur-options">
+            <h3>EUR calculation options</h3>
+            <p>Economic limit (bbl/d):
+            <input type="text" id="econ-limit" value="1.0" size="5">
+            <p>Time limit (years):
+            <input type="text" id="time-limit" value="30.0" size="5">
+            <p>Terminal decline (% eff. / year):
+            <input type="text" id="d-final" value="5.0" size="5">
         </div>
         <div class="breaker"></div>
     </div>
     <div id="map-box">
-        <h3>Selected Wells</h3>
+        <h2>Selected Wells</h2>
         <div id="map"></div>
         <p style="text-align:center">double-click to clear selection polygon
     </div>

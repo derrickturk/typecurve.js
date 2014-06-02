@@ -3,6 +3,51 @@
 
     var eps = 1e-3
 
+    /* General functions for Arps declines */
+    function Decline() {}
+
+    Decline.prototype.eur = function(econ_limit, t_max)
+    {
+        t_max = t_max || Infinity
+
+        var t_eur = Math.min(this.timeToRate(econ_limit), t_max)
+        return this.cumulative(t_eur)
+    }
+
+    /* Time until rate meets or falls below specified value */
+    Decline.prototype.timeToRate = function(rate)
+    {
+        if (rate >= this.qi)
+            return 0.0
+        if (rate < 0.0)
+            return Infinity
+        var self = this,
+            t = convex.nelderMead(function (time) {
+                if (time < 0) return Infinity
+                return Math.abs(self.rate(time) - rate)
+        }, [[1], [100]], 300)
+
+        if (this.rate(t) - rate > eps)
+            return Infinity
+        return t
+    }
+
+    /* Time until cumulative meets or exceeds specified value */
+    Decline.prototype.timeToCumulative = function(cumulative)
+    {
+        if (cumulative <= 0.0)
+            return 0.0
+        var self = this,
+            t = convex.nelderMead(function (time) {
+                if (time < 0) return Infinity
+                return Math.abs(self.cumulative(time) - cumulative)
+        }, [[1], [100]], 300)
+
+        if (cumulative - this.cumulative(t) > eps)
+            return Infinity
+        return t
+    }
+
     /* Arps hyperbolic decline with
      *     initial rate qi [vol/time]
      *     initial nominal decline Di [1/time]
@@ -14,6 +59,8 @@
         this.Di = Di
         this.b = b
     }
+
+    ns.Hyperbolic.prototype = new Decline()
 
     ns.Hyperbolic.prototype.rate = function(t)
     {
@@ -50,6 +97,8 @@
         this.Di = D
     }
 
+    ns.Exponential.prototype = new Decline()
+
     ns.Exponential.prototype.rate = function(t)
     {
         if (t < 0.0)
@@ -74,6 +123,8 @@
         this.Di = D
     }
 
+    ns.Harmonic.prototype = new Decline()
+
     ns.Harmonic.prototype.rate = function(t)
     {
         if (t < 0.0)
@@ -86,6 +137,47 @@
         if (this.Di < eps)
             return this.qi * t
         return this.qi / this.Di * Math.log(1.0 + this.Di * t)
+    }
+
+    /* Arps "modified hyperbolic" decline with
+     *     initial rate qi [vol/time]
+     *     initial nominal decline Di [1/time]
+     *     hyperbolic exponent b [1]
+     *     terminal nominal decline Df [1/time]
+     */
+    ns.ModHyperbolic = function(qi, Di, b, Df)
+    {
+        this.qi = qi
+        this.Di = Di
+        this.b = b
+        this.Df = Df
+        if (Df <= 0 || Df > Di) {
+            this.transition = Infinity
+            this.q_transition = 0
+            this.terminal = null 
+        } else {
+            this.transition = (Di / Df - 1.0) / (b * Di)
+            this.q_transition = ns.Hyperbolic.prototype.rate.call(this,
+                    this.transition)
+            this.terminal = new ns.Exponential(this.q_transition, this.Df)
+        }
+    }
+
+    ns.ModHyperbolic.prototype = new Decline()
+
+    ns.ModHyperbolic.prototype.rate = function(t)
+    {
+        if (t <= this.transition)
+            return ns.Hyperbolic.prototype.rate.call(this, t)
+        return this.terminal.rate(t - this.transition)
+    }
+
+    ns.ModHyperbolic.prototype.cumulative = function(t)
+    {
+        if (t <= this.transition)
+            return ns.Hyperbolic.prototype.cumulative.call(this, t)
+        return this.cumulative(this.transition) +
+          this.terminal.cumulative(t - this.transition)
     }
 
 })(window.typecurve = window.typecurve || {})

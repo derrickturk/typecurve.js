@@ -29,7 +29,7 @@
 
         var first_periods
         if (shift_to_peak) {
-            first_periods = majorphase.map(ns.maxIndex)
+            first_periods = majorphase.map(convex.maxIndex)
         } else  {
             first_periods = Array(majorphase.length)
             for (var i = 0; i < first_periods.length; ++i)
