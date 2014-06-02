@@ -3,6 +3,49 @@
 
     var eps = 1e-3
 
+    /* General functions for Arps declines */
+    function Decline() {}
+
+    Decline.prototype.eur = function(econ_limit, t_max)
+    {
+        var t_eur = Math.min(this.timeToRate(econ_limit), t_max)
+        return this.cumulative(t_eur)
+    }
+
+    /* Time until rate meets or falls below specified value */
+    Decline.prototype.timeToRate = function(rate)
+    {
+        if (rate >= this.qi)
+            return 0.0
+        if (rate < 0.0)
+            return Infinity
+        var self = this,
+            t = convex.nelderMead(function (time) {
+                if (time < 0) return Infinity
+                return Math.abs(self.rate(time) - rate)
+        }, [[1], [100]], 300)
+
+        if (this.rate(t) - rate > eps)
+            return Infinity
+        return t
+    }
+
+    /* Time until cumulative meets or exceeds specified value */
+    Decline.prototype.timeToCumulative = function(cumulative)
+    {
+        if (cumulative <= 0.0)
+            return 0.0
+        var self = this,
+            t = convex.nelderMead(function (time) {
+                if (time < 0) return Infinity
+                return Math.abs(self.cumulative(time) - cumulative)
+        }, [[1], [100]], 300)
+
+        if (cumulative - this.cumulative(t) > eps)
+            return Infinity
+        return t
+    }
+
     /* Arps hyperbolic decline with
      *     initial rate qi [vol/time]
      *     initial nominal decline Di [1/time]
@@ -14,6 +57,8 @@
         this.Di = Di
         this.b = b
     }
+
+    ns.Hyperbolic.prototype = new Decline()
 
     ns.Hyperbolic.prototype.rate = function(t)
     {
@@ -50,6 +95,8 @@
         this.Di = D
     }
 
+    ns.Exponential.prototype = new Decline()
+
     ns.Exponential.prototype.rate = function(t)
     {
         if (t < 0.0)
@@ -73,6 +120,8 @@
         this.qi = qi
         this.Di = D
     }
+
+    ns.Harmonic.prototype = new Decline()
 
     ns.Harmonic.prototype.rate = function(t)
     {
@@ -111,6 +160,8 @@
             this.terminal = new ns.Exponential(this.q_transition, this.Df)
         }
     }
+
+    ns.ModHyperbolic.prototype = new Decline()
 
     ns.ModHyperbolic.prototype.rate = function(t)
     {
