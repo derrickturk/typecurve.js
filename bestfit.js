@@ -7,9 +7,7 @@
             convex.makeConstrainedObjective(function (qi, Di, b) {
                 return sse(new ns.Hyperbolic(qi, Di, b), rate, time)
             }, [1, 0.01, 0], [1e99, 20, 5]),
-            initial_simplex(rate, time),
-            1.0, 2.0, 0.5,
-            300
+            initial_simplex(rate, time), 300
         )
 
         return new ns.Hyperbolic(
@@ -22,9 +20,7 @@
             convex.makeConstrainedObjective(function (qi, Di, b) {
                 return sse_interval(new ns.Hyperbolic(qi, Di, b), vol, time)
             }, [1, 0.01, 0], [1e99, 20, 5]),
-            initial_simplex(vol, time),
-            1.0, 2.0, 0.5,
-            300
+            initial_simplex(vol, time), 300
         )
 
         return new ns.Hyperbolic(

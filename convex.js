@@ -18,11 +18,15 @@
     }
 
     ns.nelderMead =
-    function(f, start, ref_factor, exp_factor, con_factor, max_iter)
+    function(f, start, max_iter, ref_factor, exp_factor, con_factor)
     {
         if (start.some(function (vec) {
             return vec.length != start.length - 1
         })) throw new Error('Invalid starting simplex!')
+
+        ref_factor = ref_factor || 1.0
+        exp_factor = exp_factor || 2.0
+        con_factor = con_factor || 0.5
 
         var result = start.map(function (vec) { return f.apply(null, vec) }),
             best = ns.minIndex(result),
