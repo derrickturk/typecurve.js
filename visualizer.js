@@ -479,11 +479,10 @@
         document.body.style.cursor = 'auto'
     }
 
-    function generate_table(data, target)
+    function generate_table(data, table)
     {
-        while (target.firstChild) target.removeChild(target.firstChild)
-        var table = document.createElement('table'),
-            header_row = document.createElement('tr'),
+        while (table.firstChild) table.removeChild(table.firstChild)
+        var header_row = document.createElement('tr'),
             fields = Object.keys(data.header[0]).sort()
 
         fields.push('first_month')
@@ -506,8 +505,6 @@
             row.appendChild(elem)
             table.appendChild(row)
         }
-
-        target.appendChild(table)
     }
 
     var dispatcher = new machina.Machina(
@@ -529,14 +526,14 @@
         },
         {
             initialize: function(state, args) {
-                var machina = this
+                var self = this
 
                 if (!(args && args.working)) {
                     set_working()
                     window.setTimeout(function () {
                         args = args || {}
                         args.working = true
-                        machina.dispatch('initialize', args)
+                        self.dispatch('initialize', args)
                     }, 4)
                     return null
                 }
@@ -550,9 +547,9 @@
                     select_poly: function (e) {
                         if (e === undefined) {
                             state.map_clear_shape()
-                            machina.dispatch('filterChange', { shape: null })
+                            self.dispatch('filterChange', { shape: null })
                         } else {
-                            machina.dispatch('filterChange', {
+                            self.dispatch('filterChange', {
                                 shape: e,
                                 fail: function () { state.map_clear_shape() }
                             })
@@ -604,14 +601,14 @@
             },
 
             filterChange: function(state, args) {
-                var machina = this
+                var self = this
                 args = args || {}
 
                 if (!(args && args.working)) {
                     set_working()
                     window.setTimeout(function () {
                         args.working = true
-                        machina.dispatch('filterChange', args)
+                        self.dispatch('filterChange', args)
                     }, 25)
                     return null
                 }
@@ -650,8 +647,19 @@
             },
 
             exportTable: function(state, args) {
+                var self = this
+
+                if (!(args && args.working)) {
+                    set_working()
+                    window.setTimeout(function () {
+                        args.working = true
+                        self.dispatch('exportTable', args)
+                    }, 25)
+                    return null
+                }
+
                 generate_table(state.filtered, args.target)
-                return null
+                return ['done', undefined]
             },
 
             done: function() {
@@ -785,6 +793,16 @@
                     dispatcher.dispatch('exportTable', {
                         target: document.getElementById('export-table')
                     })
+                })
+
+        document.getElementById('export-table-select').addEventListener('click',
+                function(e) {
+                    var seln = window.getSelection(),
+                        range = document.createRange()
+                    range.selectNodeContents(document.getElementById('export-table'))
+                    seln.removeAllRanges()
+                    seln.addRange(range)
+                    e.preventDefault()
                 })
 
         dispatcher.dispatch('initialize', {
