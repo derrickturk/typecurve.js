@@ -259,9 +259,16 @@
             draw: {
                 marker: false,
                 polyline: false,
-                circle: { shapeOptions: { color: 'blue' } },
-                rectangle: { shapeOptions: { color: 'blue' } },
+                circle: {
+                    metric: false,
+                    shapeOptions: { color: 'blue' }
+                },
+                rectangle: {
+                    metric: false,
+                    shapeOptions: { color: 'blue' }
+                },
                 polygon: {
+                    metric: false,
                     shapeOptions: { color: 'blue' },
                     allowIntersection: false
                 }
