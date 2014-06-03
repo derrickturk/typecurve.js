@@ -228,6 +228,18 @@ div.well-popup p {
 
 #export-table {
     font-family: 'Consolas', 'Courier New', 'monospace';
+    width: 100%;
+    margin: 0 auto;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+#export-table th {
+    text-align: center;
+}
+
+#export-table td {
+    text-align: right;
 }
 
 #export-table-close {

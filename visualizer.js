@@ -245,7 +245,9 @@
         options = options || {}
         var select_poly = options.select_poly || function (e) {}
 
-        var map = L.map('map').setView([32.1, -101.7], 9)
+        var map = L.map('map', {
+            doubleClickZoom: false
+        }).setView([32.1, -101.7], 9)
         L.tileLayer('http://{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.png', {
             subdomains: ['otile1', 'otile2', 'otile3', 'otile4'],
             attribution: 'Tiles &copy; MapQuest'
