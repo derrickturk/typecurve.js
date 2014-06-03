@@ -479,6 +479,37 @@
         document.body.style.cursor = 'auto'
     }
 
+    function generate_table(data, target)
+    {
+        while (target.firstChild) target.removeChild(target.firstChild)
+        var table = document.createElement('table'),
+            header_row = document.createElement('tr'),
+            fields = Object.keys(data.header[0]).sort()
+
+        fields.push('first_month')
+        for (var i = 0; i < fields.length; ++i) {
+            var header = document.createElement('th')
+            header.innerHTML = fields[i]
+            header_row.appendChild(header)
+        }
+        table.appendChild(header_row)
+
+        for (i = 0; i < data.header.length; ++i) {
+            var row = document.createElement('tr')
+            for (var j = 0; j < fields.length - 1; ++j) {
+                var elem = document.createElement('td')
+                elem.innerHTML = data.header[i][fields[j]]
+                row.appendChild(elem)
+            }
+            elem = document.createElement('td')
+            elem.innerHTML = data.month[i][0]
+            row.appendChild(elem)
+            table.appendChild(row)
+        }
+
+        target.appendChild(table)
+    }
+
     var dispatcher = new machina.Machina(
         {
             master: window.ihs,
@@ -618,9 +649,14 @@
                 return ['calculate', { filter_changed: true }]
             },
 
+            exportTable: function(state, args) {
+                generate_table(state.filtered, args.target)
+                return null
+            },
+
             done: function() {
                 set_not_working()
-                return null;
+                return null
             }
         }
     )
@@ -743,6 +779,13 @@
         el_in.addEventListener('input', updateEUR)
         tl_in.addEventListener('input', updateEUR)
         df_in.addEventListener('input', updateEUR)
+
+        document.getElementById('export-link').addEventListener('click',
+                function() {
+                    dispatcher.dispatch('exportTable', {
+                        target: document.getElementById('export-table')
+                    })
+                })
 
         dispatcher.dispatch('initialize', {
             oil_el: new Number(el_in.value),

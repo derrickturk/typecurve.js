@@ -149,6 +149,7 @@ path.predicted {
     width: 95%;
     margin: 0 auto;
     margin-top: 50px;
+    text-align: center;
 }
 
 #map {
@@ -202,4 +203,13 @@ div.well-popup p {
     margin-top: -64pt;
     font-size: 128pt;
     color: white;
+}
+
+#export-table {
+    display: none;
+    position: absolute;
+}
+
+#export-table:target {
+    display: inherit;
 }
