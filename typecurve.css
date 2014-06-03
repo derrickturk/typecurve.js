@@ -14,6 +14,16 @@ h1, h2, h3, h4, h5, h6 {
     font-family: 'Palatino', 'Palatino Linotype', 'serif';
 }
 
+div.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin: 0;
+    height: 0;
+    width: 100%;
+    height: 100%;
+}
+
 #header {
     width: 100%;
     margin: 0 auto;
@@ -149,6 +159,7 @@ path.predicted {
     width: 95%;
     margin: 0 auto;
     margin-top: 50px;
+    text-align: center;
 }
 
 #map {
@@ -179,13 +190,6 @@ div.well-popup p {
 }
 
 #working {
-    position: fixed;
-    top: 0;
-    left: 0;
-    margin: 0;
-    height: 0;
-    width: 100%;
-    height: 100%;
     background-color: blue;
     z-index: 9001;
     opacity: 0.75;
@@ -202,4 +206,58 @@ div.well-popup p {
     margin-top: -64pt;
     font-size: 128pt;
     color: white;
+}
+
+#export-table-overlay {
+    display: none;
+    margin: 0 auto;
+    position: fixed;
+    top: 12.5%;
+    left: 12.5%;
+    width: 75%;
+    height: 75%;
+    border: 2px solid black;
+    background-color: white;
+    z-index: 9000;
+    overflow: auto;
+}
+
+#export-table-overlay:target {
+    display: inherit;
+}
+
+#export-table {
+    font-family: 'Consolas', 'Courier New', 'monospace';
+}
+
+#export-table-close {
+    position: fixed;
+    top: 11.0%;
+    left: 86.8%;
+    font-family: 'Consolas', 'Courier New', 'monospace';
+    font-size: large;
+    border: 2px solid black;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    text-vertical-align: center;
+    text-align: center;
+    background-color: #dddddd;
+}
+
+#export-table-close a:link, #export-table-close a:visited {
+    color: black;
+    font-style: normal;
+    text-decoration: none;
+}
+
+#export-table-select {
+    position: fixed;
+    top: 87.8%;
+    left: 66%;
+    width: 100px;
+    text-align: center;
+    font-size: large;
+    border: 2px solid black;
+    background-color: #dddddd;
 }

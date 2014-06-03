@@ -479,6 +479,34 @@
         document.body.style.cursor = 'auto'
     }
 
+    function generate_table(data, table)
+    {
+        while (table.firstChild) table.removeChild(table.firstChild)
+        var header_row = document.createElement('tr'),
+            fields = Object.keys(data.header[0]).sort()
+
+        fields.push('first_month')
+        for (var i = 0; i < fields.length; ++i) {
+            var header = document.createElement('th')
+            header.innerHTML = fields[i]
+            header_row.appendChild(header)
+        }
+        table.appendChild(header_row)
+
+        for (i = 0; i < data.header.length; ++i) {
+            var row = document.createElement('tr')
+            for (var j = 0; j < fields.length - 1; ++j) {
+                var elem = document.createElement('td')
+                elem.innerHTML = data.header[i][fields[j]]
+                row.appendChild(elem)
+            }
+            elem = document.createElement('td')
+            elem.innerHTML = data.month[i][0]
+            row.appendChild(elem)
+            table.appendChild(row)
+        }
+    }
+
     var dispatcher = new machina.Machina(
         {
             master: window.ihs,
@@ -498,14 +526,14 @@
         },
         {
             initialize: function(state, args) {
-                var machina = this
+                var self = this
 
                 if (!(args && args.working)) {
                     set_working()
                     window.setTimeout(function () {
                         args = args || {}
                         args.working = true
-                        machina.dispatch('initialize', args)
+                        self.dispatch('initialize', args)
                     }, 4)
                     return null
                 }
@@ -519,9 +547,9 @@
                     select_poly: function (e) {
                         if (e === undefined) {
                             state.map_clear_shape()
-                            machina.dispatch('filterChange', { shape: null })
+                            self.dispatch('filterChange', { shape: null })
                         } else {
-                            machina.dispatch('filterChange', {
+                            self.dispatch('filterChange', {
                                 shape: e,
                                 fail: function () { state.map_clear_shape() }
                             })
@@ -573,14 +601,14 @@
             },
 
             filterChange: function(state, args) {
-                var machina = this
+                var self = this
                 args = args || {}
 
                 if (!(args && args.working)) {
                     set_working()
                     window.setTimeout(function () {
                         args.working = true
-                        machina.dispatch('filterChange', args)
+                        self.dispatch('filterChange', args)
                     }, 25)
                     return null
                 }
@@ -618,9 +646,25 @@
                 return ['calculate', { filter_changed: true }]
             },
 
+            exportTable: function(state, args) {
+                var self = this
+
+                if (!(args && args.working)) {
+                    set_working()
+                    window.setTimeout(function () {
+                        args.working = true
+                        self.dispatch('exportTable', args)
+                    }, 25)
+                    return null
+                }
+
+                generate_table(state.filtered, args.target)
+                return ['done', undefined]
+            },
+
             done: function() {
                 set_not_working()
-                return null;
+                return null
             }
         }
     )
@@ -743,6 +787,23 @@
         el_in.addEventListener('input', updateEUR)
         tl_in.addEventListener('input', updateEUR)
         df_in.addEventListener('input', updateEUR)
+
+        document.getElementById('export-link').addEventListener('click',
+                function() {
+                    dispatcher.dispatch('exportTable', {
+                        target: document.getElementById('export-table')
+                    })
+                })
+
+        document.getElementById('export-table-select').addEventListener('click',
+                function(e) {
+                    var seln = window.getSelection(),
+                        range = document.createRange()
+                    range.selectNodeContents(document.getElementById('export-table'))
+                    seln.removeAllRanges()
+                    seln.addRange(range)
+                    e.preventDefault()
+                })
 
         dispatcher.dispatch('initialize', {
             oil_el: new Number(el_in.value),

@@ -21,7 +21,7 @@
     <link rel="stylesheet" type="text/css" href="typecurve.css">
 </head>
 <body>
-<div id="working"><p>Working...</div>
+<div id="working" class="fullscreen"><p>Working...</div>
 <div id="header">
     <h1>PIVoT</h1>
     <h2>{ Permian Interactive Visualization of Typecurves }</h2>
@@ -76,11 +76,17 @@
     <div id="map-box">
         <h2>Selected Wells</h2>
         <div id="map"></div>
-        <p style="text-align:center">double-click to clear selection polygon
+        <p>double-click to clear selection polygon
+        <p><a href="#export-table-overlay" id="export-link">export table of selected wells</a>
     </div>
 </div>
 <div id="footer">
     <h5>an experimental production by dwt | <a href="http://www.terminusdatascience.com">terminus data science, LLC</a></h5>
+</div>
+<div id="export-table-overlay">
+    <table id="export-table"></table>
+    <div id="export-table-close"><a href="#">X</a></div>
+    <div id="export-table-select"><a href="#export-table-overlay">select all</a></div>
 </div>
 </body>
 <html>
