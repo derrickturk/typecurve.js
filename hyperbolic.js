@@ -29,7 +29,7 @@
 
         if (this.rate(t) - rate > eps)
             return Infinity
-        return t
+        return t[0]
     }
 
     /* Time until cumulative meets or exceeds specified value */
@@ -45,7 +45,7 @@
 
         if (cumulative - this.cumulative(t) > eps)
             return Infinity
-        return t
+        return t[0]
     }
 
     /* Arps hyperbolic decline with
@@ -151,7 +151,7 @@
         this.Di = Di
         this.b = b
         this.Df = Df
-        if (Df <= 0 || Df > Di) {
+        if (Df <= 0 || Df > Di || Di != Di) {
             this.transition = Infinity
             this.q_transition = 0
             this.terminal = null 
