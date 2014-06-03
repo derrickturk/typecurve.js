@@ -157,7 +157,7 @@
             pad_left = padding.left || 100,
             pad_right = padding.right || 20,
             pad_bottom = padding.bottom || 50,
-            pad_top = padding.top || 0,
+            pad_top = padding.top || 10,
             plot_width = width - pad_left - pad_right,
             plot_height = height - pad_bottom - pad_top
 
@@ -211,7 +211,7 @@
             ))
             if (ydom[0] < 1.0)
                 ydom[0] = 1
-            scale_y.domain(ydom)
+            scale_y.domain(ydom).clamp(true)
 
             axis_x_area.call(axis_x)
             axis_y_area.call(axis_y)
