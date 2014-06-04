@@ -80,16 +80,25 @@
         var normalized
         if (!percentile)
             normalized = typecurve.meanProduction(data.oil, [ data.gas ],
-                { shift_to_peak: true })
+                { shift_to_peak: !!!window.WORSE_JUJU })
         else
             normalized = typecurve.percentileProduction(data.oil, [ data.gas ],
-                percentile, { shift_to_peak: true })
+                percentile, { shift_to_peak: !!!window.WORSE_JUJU })
 
         var time = typecurve.iota(0, normalized.major.length),
-        oil_tc = typecurve.bestHyperbolicFromIntervalVolumes(
-            normalized.major, time),
-        gas_tc = typecurve.bestHyperbolicFromIntervalVolumes(
-            normalized.minor[0], time)
+            oil_tc, gas_tc
+
+        if (window.BAD_JUJU) {
+            oil_tc = typecurve.bestHyperbolicFromRate(
+                normalized.major, time),
+            gas_tc = typecurve.bestHyperbolicFromRate(
+                normalized.minor[0], time)
+        } else {
+            oil_tc = typecurve.bestHyperbolicFromIntervalVolumes(
+                normalized.major, time),
+            gas_tc = typecurve.bestHyperbolicFromIntervalVolumes(
+                normalized.minor[0], time)
+        }
 
         var predict_oil = new Array(time.length)
         for (var i = 0; i < time.length; ++i) {
