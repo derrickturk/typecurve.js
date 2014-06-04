@@ -86,18 +86,60 @@
                 percentile, { shift_to_peak: !!!window.WORSE_JUJU })
 
         var time = typecurve.iota(0, normalized.major.length),
-            oil_tc, gas_tc
-
-        if (window.BAD_JUJU) {
-            oil_tc = typecurve.bestHyperbolicFromRate(
-                normalized.major, time),
-            gas_tc = typecurve.bestHyperbolicFromRate(
-                normalized.minor[0], time)
-        } else {
             oil_tc = typecurve.bestHyperbolicFromIntervalVolumes(
                 normalized.major, time),
             gas_tc = typecurve.bestHyperbolicFromIntervalVolumes(
                 normalized.minor[0], time)
+
+        if (window.BAD_JUJU) {
+            proper_oil = oil_tc
+            proper_gas = gas_tc
+            oil_tc = typecurve.bestHyperbolicFromRate(
+                normalized.major, time)
+            gas_tc = typecurve.bestHyperbolicFromRate(
+                normalized.minor[0], time)
+
+            if (window.BAD_JUJU_COMPENSATE) {
+                oil_tc.qi = proper_oil.qi
+                gas_tc.qi = proper_gas.qi
+
+                if (window.BAD_JUJU_COMPENSATE_MORE) {
+                    var el = new Number(document.getElementById('econ-limit').value),
+                        tl = new Number(document.getElementById('time-limit').value),
+                        df = nominal_from_tangent(
+                                (new Number(document.getElementById('d-final').value)) / 100.0),
+                        proper_eur = compute_eur({
+                            oil_params: {
+                                qi: proper_oil.qi / 30.4,
+                                Di: proper_oil.Di * 12,
+                                b: proper_oil.b
+                            },
+                            gas_params: {
+                                qi: proper_gas.qi / 30.4,
+                                Di: proper_gas.Di * 12,
+                                b: proper_gas.b
+                            }
+                        }, el, tl, df)
+
+                    oil_tc.b = convex.nelderMead(function (b) {
+                        return Math.pow(
+                            (new typecurve.ModHyperbolic(oil_tc.qi / 30.4, oil_tc.Di * 12, b, df))
+                              .eur(el, tl) * 365.25 / 1000.0 -
+                            proper_eur.oil,
+                            2
+                        )
+                    }, [[0.2], [4.0]], 100)[0]
+
+                    gas_tc.b = convex.nelderMead(function (b) {
+                        return Math.pow(
+                            (new typecurve.ModHyperbolic(gas_tc.qi / 30.4, gas_tc.Di * 12, b, df))
+                              .eur(el, tl) * 365.25 / 1000.0 -
+                            proper_eur.gas,
+                            2
+                        )
+                    }, [[0.2], [4.0]], 100)[0]
+                }
+            }
         }
 
         var predict_oil = new Array(time.length)
@@ -822,6 +864,11 @@
                     seln.addRange(range)
                     e.preventDefault()
                 })
+
+        document.addEventListener('keypress', function (e) {
+            if (e.key == 'E' && e.shiftKey)
+                dispatcher.dispatch('calculate')
+        })
 
         dispatcher.dispatch('initialize', {
             oil_el: new Number(el_in.value),
