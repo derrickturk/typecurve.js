@@ -275,6 +275,66 @@
         return update
     }
 
+    function draw_histograms(dists, options)
+    {
+        options = options || {}
+        var width = options.width || 640,
+            height = options.height || 480,
+            padding = options.padding || {},
+            pad_left = padding.left || 30,
+            pad_right = padding.right || 30,
+            pad_bottom = padding.bottom || 30,
+            pad_top = padding.top || 10,
+            plot_width = width - pad_left - pad_right,
+            plot_height = height - pad_bottom - pad_top
+
+        var scale_x = d3.scale.linear().range([0, plot_width])
+                .domain(d3.extent(dists.oil_eur)),
+            data = d3.layout.histogram().bins(scale_x.ticks(20))(dists.oil_eur),
+            scale_y = d3.scale.linear().range([plot_height, 0])
+                .domain([0, d3.max(data, function(d) { return d.y })]),
+            axis_x = d3.svg.axis().scale(scale_x).orient('bottom'),
+            axis_y = d3.svg.axis().scale(scale_y).orient('left')
+                .tickFormat(function (n) { return n.toFixed(0) })
+
+        d3.select('#hist').selectAll('svg').remove()
+        var scatter = d3.select('#hist').append('svg:svg')
+            .attr('width', width)
+            .attr('height', height)
+
+        var plot_area = scatter.append('svg:g')
+            .attr('transform', 'translate(' + pad_left + ',' + pad_top + ')')
+
+        var axis_x_area = plot_area.append('svg:g').attr('class', 'axis')
+              .attr('transform', 'translate(0, ' + plot_height + ')'),
+            axis_y_area = plot_area.append('svg:g').attr('class', 'axis')
+
+        scatter.append("text")
+            .attr("class", "label")
+            .attr("text-anchor", "end")
+            .attr("x", width - 15)
+            .attr("y", height - 5)
+            .text("Value");
+
+        scatter.append("text")
+            .attr("class", "label")
+            .attr("text-anchor", "end")
+            .attr("y", 15)
+            .attr("dy", ".75em")
+            .attr("transform", "rotate(-90)")
+            .text("Count");
+
+        var bar = plot_area.selectAll(".bar").data(data).enter().append("g")
+                .attr("class", "bar")
+                .attr("transform", function(d) {
+                    return "translate(" + scale_x(d.x) + "," + scale_y(d.y)
+                    + ")"
+                })
+
+        bar.append("rect").attr("x", 1).attr("width", scale_x(data[0].dx) - 1)
+            .attr("height", function (d) { return height - scale_y(d.y) })
+    }
+
     function initialize_map(options)
     {
         options = options || {}
@@ -728,7 +788,7 @@
             },
 
             displayHistograms: function(state, args) {
-                debugger
+                draw_histograms(state.dists)
                 return ['done', undefined]
             },
 
@@ -863,6 +923,11 @@
                     dispatcher.dispatch('exportTable', {
                         target: document.getElementById('export-table')
                     })
+                })
+
+        document.getElementById('hist-link').addEventListener('click',
+                function() {
+                    dispatcher.dispatch('launchHistograms')
                 })
 
         document.getElementById('export-table-select').addEventListener('click',

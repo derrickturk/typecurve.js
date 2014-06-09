@@ -273,3 +273,13 @@ div.popup-close a:link, div.popup-close a:visited {
     border: 2px solid black;
     background-color: #dddddd;
 }
+
+#hist {
+    margin: 0 auto;
+    width: 100%;
+    text-align: center;
+}
+
+#hist svg {
+    margin: 0 auto;
+}
