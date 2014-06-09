@@ -148,6 +148,41 @@
         }
     }
 
+    function sample_distributions(data, oil_el, max_time, d_final)
+    {
+        var result = {
+            oil_qi: [],
+            oil_Di: [],
+            oil_b: [],
+            oil_eur: [],
+            gas_qi: [],
+            gas_Di: [],
+            gas_b: [],
+            gas_eur: []
+        }
+
+        for (var i = 0; i < data.header.length; ++i) {
+            var fit = compute_typecurves({
+                header: [data.header[i]],
+                oil: [data.oil[i]],
+                gas: [data.gas[i]]
+            })
+
+            var eur = compute_eur(fit, oil_el, max_time, d_final)
+
+            result.oil_qi.push(fit.oil_params.qi)
+            result.oil_Di.push(fit.oil_params.Di)
+            result.oil_b.push(fit.oil_params.b)
+            result.oil_eur.push(eur.oil)
+            result.gas_qi.push(fit.gas_params.qi)
+            result.gas_Di.push(fit.gas_params.Di)
+            result.gas_b.push(fit.gas_params.b)
+            result.gas_eur.push(eur.gas)
+        }
+
+        return result
+    }
+
     function initialize_graph(options)
     {
         options = options || {}
@@ -528,6 +563,7 @@
             oil_el: 0,
             max_time: Infinity,
             d_final: 0.0,
+            dists: null,
             graph_update: null,
             map_update: null,
             map_clear_shape: null,
@@ -574,10 +610,10 @@
             calculate: function(state, args) {
                 state.data = compute_typecurves(state.filtered,
                     state.aggregation)
-                return ['calculate_eur', args]
+                return ['calculateEUR', args]
             },
 
-            calculate_eur: function(state, args) {
+            calculateEUR: function(state, args) {
                 state.eur = compute_eur(state.data,
                         state.oil_el, state.max_time, state.d_final)
                 return ['update', args]
@@ -599,14 +635,14 @@
                 return ['calculate', undefined]
             },
 
-            eurChange: function(state, args) {
+            EURChange: function(state, args) {
                 args = args || {}
 
                 state.oil_el = args.oil_el || state.oil_el
                 state.max_time = args.max_time || state.max_time
                 state.d_final = args.d_final || state.d_final
 
-                return ['calculate_eur', undefined]
+                return ['calculateEUR', undefined]
             },
 
             filterChange: function(state, args) {
@@ -661,6 +697,7 @@
                 if (!(args && args.working)) {
                     set_working()
                     window.setTimeout(function () {
+                        args = args || {}
                         args.working = true
                         self.dispatch('exportTable', args)
                     }, 25)
@@ -668,6 +705,30 @@
                 }
 
                 generate_table(state.filtered, args.target)
+                return ['done', undefined]
+            },
+
+            launchHistograms: function(state, args) {
+                var self = this
+
+                if (!(args && args.working)) {
+                    set_working()
+                    window.setTimeout(function () {
+                        args = args || {}
+                        args.working = true
+                        self.dispatch('launchHistograms', args)
+                    }, 25)
+                    return null
+                }
+
+                state.dists = sample_distributions(state.filtered,
+                        state.oil_el, state.max_time, state.d_final)
+
+                return ['displayHistograms', undefined]
+            },
+
+            displayHistograms: function(state, args) {
+                debugger
                 return ['done', undefined]
             },
 
@@ -786,7 +847,7 @@
 
         function updateEUR()
         {
-            dispatcher.dispatch('eurChange', {
+            dispatcher.dispatch('EURChange', {
                 oil_el: new Number(el_in.value),
                 max_time: new Number(tl_in.value),
                 d_final: nominal_from_tangent(new Number(df_in.value) / 100.0)
@@ -820,4 +881,6 @@
             d_final: nominal_from_tangent(new Number(df_in.value) / 100.0)
         })
     }
+
+    window.dispatcher = dispatcher
 })()

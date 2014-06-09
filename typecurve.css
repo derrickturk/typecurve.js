@@ -208,7 +208,7 @@ div.well-popup p {
     color: white;
 }
 
-#export-table-overlay {
+div.popup {
     display: none;
     margin: 0 auto;
     position: fixed;
@@ -222,7 +222,7 @@ div.well-popup p {
     overflow: auto;
 }
 
-#export-table-overlay:target {
+div.popup:target {
     display: inherit;
 }
 
@@ -242,7 +242,7 @@ div.well-popup p {
     text-align: right;
 }
 
-#export-table-close {
+div.popup-close {
     position: fixed;
     top: 11.0%;
     left: 86.8%;
@@ -257,7 +257,7 @@ div.well-popup p {
     background-color: #dddddd;
 }
 
-#export-table-close a:link, #export-table-close a:visited {
+div.popup-close a:link, div.popup-close a:visited {
     color: black;
     font-style: normal;
     text-decoration: none;

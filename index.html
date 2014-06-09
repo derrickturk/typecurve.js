@@ -72,22 +72,29 @@
             <p>Terminal decline (% eff. / year):
             <input type="text" id="d-final" value="5.0" size="5">
         </div>
+        <div style="padding-top: 25px;">
+            <a href="#histograms" id="hist-link">Launch Histograms</a>
+        </div>
         <div class="breaker"></div>
     </div>
     <div id="map-box">
         <h2>Selected Wells</h2>
         <div id="map"></div>
         <p>double-click to clear selection polygon
-        <p><a href="#export-table-overlay" id="export-link">export table of selected wells</a>
+        <p><a href="#table" id="export-link">export table of selected wells</a>
     </div>
 </div>
 <div id="footer">
     <h5>an experimental production by dwt | <a href="http://www.terminusdatascience.com">terminus data science, LLC</a></h5>
 </div>
-<div id="export-table-overlay">
+<div class="popup" id="table">
     <table id="export-table"></table>
-    <div id="export-table-close"><a href="#">X</a></div>
-    <div id="export-table-select"><a href="#export-table-overlay">select all</a></div>
+    <div class="popup-close"><a href="#">X</a></div>
+    <div id="export-table-select"><a href="#table">select all</a></div>
 </div>
+<div class="popup" id="histograms">
+    <div class="popup-close"><a href="#">X</a></div>
+</div>
+<div id
 </body>
 <html>
