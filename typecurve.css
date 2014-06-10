@@ -284,4 +284,6 @@ div.popup-close a:link, div.popup-close a:visited {
 
 #hist svg {
     margin: 0 auto;
+    position: relative;
+    top: calc(50% - 300px)
 }

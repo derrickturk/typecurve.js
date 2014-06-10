@@ -281,7 +281,7 @@
         var width = options.width || 800,
             height = options.height || 600,
             padding = options.padding || {},
-            pad_left = padding.left || 100,
+            pad_left = padding.left || 75,
             pad_right = padding.right || 20,
             pad_bottom = padding.bottom || 50,
             pad_top = padding.top || 10,
@@ -782,6 +782,12 @@
                         self.dispatch('launchHistograms', args)
                     }, 25)
                     return null
+                }
+
+                if (state.filtered.header.length > 500) {
+                    alert('Too many wells in working set!')
+                    window.location.hash = '#'
+                    return ['done', undefined]
                 }
 
                 state.dists = sample_distributions(state.filtered,
