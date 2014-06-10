@@ -287,3 +287,7 @@ div.popup-close a:link, div.popup-close a:visited {
     position: relative;
     top: calc(50% - 300px)
 }
+
+.bar rect {
+    fill: purple;
+}
