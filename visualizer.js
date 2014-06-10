@@ -285,12 +285,16 @@
             pad_right = padding.right || 20,
             pad_bottom = padding.bottom || 50,
             pad_top = padding.top || 10,
+            pad_bars = padding.bars || 5,
             plot_width = width - pad_left - pad_right,
             plot_height = height - pad_bottom - pad_top
 
+        var x_dom = d3.extent(dists.oil_eur)
+        x_dom[0] = 0.0
         var scale_x = d3.scale.linear().range([0, plot_width])
-                .domain(d3.extent(dists.oil_eur)),
-            data = d3.layout.histogram().bins(scale_x.ticks(20))(dists.oil_eur),
+                .domain(x_dom),
+            data = d3.layout.histogram().bins(scale_x.ticks(10))
+                (dists.oil_eur),
             scale_y = d3.scale.linear().range([plot_height, 0])
                 .domain([0, d3.max(data, function(d) { return d.y })]),
             axis_x = d3.svg.axis().scale(scale_x).orient('bottom'),
@@ -317,7 +321,7 @@
             .attr("text-anchor", "end")
             .attr("x", width - 15)
             .attr("y", height - 5)
-            .text("Value");
+            .text("Oil EUR (Mstb)");
 
         scatter.append("text")
             .attr("class", "label")
@@ -325,16 +329,17 @@
             .attr("y", 15)
             .attr("dy", ".75em")
             .attr("transform", "rotate(-90)")
-            .text("Count");
+            .text("Well Count");
 
         var bar = plot_area.selectAll(".bar").data(data).enter().append("g")
                 .attr("class", "bar")
                 .attr("transform", function(d) {
-                    return "translate(" + scale_x(d.x) + "," + scale_y(d.y)
+                    return "translate(" + scale_x(d.x + pad_bars) + "," + scale_y(d.y)
                     + ")"
                 })
 
-        bar.append("rect").attr("x", 1).attr("width", scale_x(data[0].dx) - 1)
+        bar.append("rect").attr("x", 0)
+            .attr("width", scale_x(data[0].dx) - 2 * pad_bars)
             .attr("height", function (d) { return plot_height - scale_y(d.y) })
     }
 
@@ -784,7 +789,13 @@
                     return null
                 }
 
-                if (state.filtered.header.length > 500) {
+                if (state.filtered.header.length <= 1) {
+                    alert('Too few wells in working set!')
+                    window.location.hash = '#'
+                    return ['done', undefined]
+                }
+
+                if (state.filtered.header.length > 1000) {
                     alert('Too many wells in working set!')
                     window.location.hash = '#'
                     return ['done', undefined]
