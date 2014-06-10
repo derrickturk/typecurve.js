@@ -278,12 +278,12 @@
     function draw_histograms(dists, options)
     {
         options = options || {}
-        var width = options.width || 640,
-            height = options.height || 480,
+        var width = options.width || 800,
+            height = options.height || 600,
             padding = options.padding || {},
-            pad_left = padding.left || 30,
-            pad_right = padding.right || 30,
-            pad_bottom = padding.bottom || 30,
+            pad_left = padding.left || 100,
+            pad_right = padding.right || 20,
+            pad_bottom = padding.bottom || 50,
             pad_top = padding.top || 10,
             plot_width = width - pad_left - pad_right,
             plot_height = height - pad_bottom - pad_top
@@ -309,6 +309,9 @@
               .attr('transform', 'translate(0, ' + plot_height + ')'),
             axis_y_area = plot_area.append('svg:g').attr('class', 'axis')
 
+        axis_x_area.call(axis_x)
+        axis_y_area.call(axis_y)
+
         scatter.append("text")
             .attr("class", "label")
             .attr("text-anchor", "end")
@@ -332,7 +335,7 @@
                 })
 
         bar.append("rect").attr("x", 1).attr("width", scale_x(data[0].dx) - 1)
-            .attr("height", function (d) { return height - scale_y(d.y) })
+            .attr("height", function (d) { return plot_height - scale_y(d.y) })
     }
 
     function initialize_map(options)
