@@ -90,11 +90,12 @@
                 percentile, { shift_to_peak: true })
         }
 
-        var time = typecurve.iota(0, normalized_oil.major.length),
+        var time = typecurve.iota(0, Math.max(
+                    normalized_oil.major.length, normalized_gas.major.length)),
         oil_tc = typecurve.bestHyperbolicFromIntervalVolumes(
-            normalized_oil.major, time),
+            normalized_oil.major, time.slice(0, normalized_oil.major.length)),
         gas_tc = typecurve.bestHyperbolicFromIntervalVolumes(
-            normalized_gas.major, time)
+            normalized_gas.major, time.slice(0, normalized_gas.major.length))
 
         var predict_oil = new Array(time.length)
         for (var i = 0; i < time.length; ++i) {
