@@ -77,19 +77,24 @@
     {
         function to_daily(monthly) { return monthly / 30.4 }
 
-        var normalized
-        if (!percentile)
-            normalized = typecurve.meanProduction(data.oil, [ data.gas ],
+        var normalized_oil, normalized_gas
+        if (!percentile) {
+            normalized_oil = typecurve.meanProduction(data.oil, [],
                 { shift_to_peak: true })
-        else
-            normalized = typecurve.percentileProduction(data.oil, [ data.gas ],
+            normalized_gas = typecurve.meanProduction(data.gas, [],
+                { shift_to_peak: true })
+        } else {
+            normalized_oil = typecurve.percentileProduction(data.oil, [],
                 percentile, { shift_to_peak: true })
+            normalized_gas = typecurve.percentileProduction(data.gas, [],
+                percentile, { shift_to_peak: true })
+        }
 
-        var time = typecurve.iota(0, normalized.major.length),
+        var time = typecurve.iota(0, normalized_oil.major.length),
         oil_tc = typecurve.bestHyperbolicFromIntervalVolumes(
-            normalized.major, time),
+            normalized_oil.major, time),
         gas_tc = typecurve.bestHyperbolicFromIntervalVolumes(
-            normalized.minor[0], time)
+            normalized_gas.major, time)
 
         var predict_oil = new Array(time.length)
         for (var i = 0; i < time.length; ++i) {
@@ -105,8 +110,8 @@
 
         return {
             time: time,
-            aggregate_oil: normalized.major.map(to_daily),
-            aggregate_gas: normalized.minor[0].map(to_daily),
+            aggregate_oil: normalized_oil.major.map(to_daily),
+            aggregate_gas: normalized_gas.major.map(to_daily),
             predict_oil: predict_oil.map(to_daily),
             predict_gas: predict_gas.map(to_daily),
             predict_oil_rate: time.map(oil_tc.rate, oil_tc).map(to_daily),
